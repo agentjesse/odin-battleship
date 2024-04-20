@@ -11,7 +11,14 @@ import { logToConsole as lg, tableToConsole as tb, objectToString as ots } from 
 // import { functionOne } from './myModule'; //modules import testing
 // functionOne();
 
-//Project wrapped in initializer function to not have it's top level code execute when jest
+//jest testing for this file is in index.test.js and done with ES Module exports
+
+export const makeShip = (length = 2, hits = 0, isSunk = false)=> {
+
+  return { length: 2, hits: 0, isSunk: false };
+};
+
+//Main Project wrapped in initializer function to not have it's top level code execute when jest
 //imports this file.
 const initProject = ()=> {
 
@@ -22,6 +29,3 @@ const initProject = ()=> {
 }; //end of wrapped project
 // Start project code when DOM is fully loaded
 document.addEventListener('DOMContentLoaded', initProject);
-
-//jest testing for this file is in index.test.js and done with ES Module exports
-export const sum = (a, b)=> a + b; //extra example fn for testing
