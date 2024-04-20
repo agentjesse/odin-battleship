@@ -6,6 +6,7 @@ test('use jsdom in this test file', () => {
   expect(element).not.toBeNull();
 });
 */
+
 test.only('adds 1 + 2 to equal 3 and not 999', () => {
   //matcher for exact equality (Object.is)
   expect(sum(1, 2)).toBe(3);
