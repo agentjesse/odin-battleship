@@ -16,6 +16,7 @@
         "max-len":"warn",
         "no-console":"off",
         "arrow-spacing":"off",
+        "template-curly-spacing":"off",
         "computed-property-spacing":"warn",
         "spaced-comment":"off",
         "space-in-parens":"off",
@@ -30,7 +31,10 @@
         "default-case":"warn",
         "padded-blocks":"off",
         "consistent-return":"off",
-        "template-curly-spacing":"warn",
-        "import/prefer-default-export":"warn"
+        "import/prefer-default-export":"warn",
+        "default-case":"off",
+        "no-underscore-dangle":"off",
+        "computed-property-spacing":"off",
+        "prefer-destructuring":"warn"
     }
 }
