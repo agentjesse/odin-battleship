@@ -1,7 +1,7 @@
 /* Next task:
 -Create a Gameboard factory:
-Gameboards should be able to place ships at specific coordinates by calling the ship factory or class.
--  use ship fn for boat creation: Carrier 5, Battleship 4, Destroyer 3, Submarine 3, Patrol Boat 2. patrol boat is default
+Gameboards should have receiveAttack fn that takes coordinates, determines if the attack hit a ship, and then calls ‘hit’ on the correct ship. missed shots are recorded too.
+
 -update logger file, index.js imports examples, eslint config in boilerplate
 */
 
@@ -112,9 +112,18 @@ export const makeGameboard = ()=> {
     _placeShip(startCoords, direction, shipName, playGrid);
   };
 
+  //fn to receive opponent's attack from coordinates. must call hit on appropriate ship if needed, or record the missed shot somewhere...
+  const receiveAttack = ()=> {
+    
+
+
+
+  }
+
   return {
     getPlayGrid: ()=> playGrid,
     placeShip,
+    receiveAttack
   };
 };
 
