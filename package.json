@@ -6,8 +6,8 @@
   "description": "odin battleship project",
   "main": "./src/index.js",
   "scripts": {
-    "test": "jest",
-    "watch": "jest --watch",
+    "test": "node --no-deprecation ./node_modules/.bin/jest",
+    "watch": "node --no-deprecation ./node_modules/.bin/jest --watch",
     "webpackWatch": "webpack --watch --config webpack.prod.cjs",
     "start": "webpack serve --open --config webpack.dev.cjs",
     "startQ": "webpack serve --config webpack.dev.cjs",

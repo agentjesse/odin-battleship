@@ -1,23 +1,21 @@
 // eslint-disable-next-line object-curly-newline
 import { makeShip, makeGameboard } from './index.js';
 import { logToConsole as lg, objectToString as ots, log2DStringArray } from './logger.js';
-/* this test works, just hiding it.
+
 test('use jsdom in this test file', () => {
   const element = document.createElement('div');
   expect(element).not.toBeNull();
 });
-*/
 
 test('ship objects creation with: length, hitsReceived, isSunk', () => {
   //make a default 2 length ship, sink it
   const testShip = makeShip('Patrol Boat');
   testShip.hitShip();
   testShip.hitShip();
-
+  //check it's state
   expect(testShip.getLength()).toBe(2);
   expect(testShip.getHits()).toBe(2);
   expect(testShip.isSunk()).toBe(true);
-  // expect(testShip).toEqual({ length: 2, hits: 0, isSunk: false });
 });
 
 test('gameboard creation', ()=> {
@@ -35,6 +33,12 @@ test('gameboard creation', ()=> {
   //out of bounds / occupied placement tests
   expect( ()=> board.placeShip( [0, 0], 'right', 'Carrier' ) ).toThrow('space occupied');
   expect( ()=> board.placeShip( [0, 9], 'right', 'Carrier' ) ).toThrow('space out of bounds');
+  //received attack tests
+  expect( ()=> board.receiveAttack([10, 0]) ).toThrow('attack out of bounds');
+  board.receiveAttack([5, 0]);
+  expect( board.getPlayGrid()[5][0] ).toBe('miss');
+  board.receiveAttack([0, 0]);
+  expect( board.getPlayGrid()[0][0] ).toBe('hit');
   //visualize
   log2DStringArray( board.getPlayGrid() );
 

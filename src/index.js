@@ -1,8 +1,8 @@
 /* Next task:
 -Create a Gameboard factory:
-Gameboards should have receiveAttack fn that takes coordinates, determines if the attack hit a ship, and then calls ‘hit’ on the correct ship. missed shots are recorded too.
+Gameboards should have receiveAttack fn that takes coordinates, determines if the attack hit a ship, and then calls ‘hit’ on the correct ship.
 
--update logger file, index.js imports examples, eslint config in boilerplate
+-update logger file, index.js imports examples, eslint config, package.json in boilerplate
 */
 
 // JS/CSS imports
@@ -60,7 +60,7 @@ const _placeShip = ( startCoords, direction, shipName, playGrid )=> {
     if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
       //check if space is occupied
       if ( playGrid[row][col] === null ) return true;
-      throw new Error('space occupied'); //when space out of bounds
+      throw new Error('space occupied'); //when space has a ship
       //*throw statement immediately ends fn execution. control then passed to first
       //catch block in the call stack. program terminates if no catch block exists
       //among caller functions.
@@ -112,11 +112,22 @@ export const makeGameboard = ()=> {
     _placeShip(startCoords, direction, shipName, playGrid);
   };
 
-  //fn to receive opponent's attack from coordinates. must call hit on appropriate ship if needed, or record the missed shot somewhere...
-  const receiveAttack = ()=> {
-    
+  //fn to handle attack from coordinates. must call hit on ships, or record missed shot
+  const receiveAttack = ( attackCoords )=> {
+    const row = attackCoords[0];
+    const col = attackCoords[1];
+    //check in bounds spaces
+    //_placeShip isValid fn has Error throwing logic, extracting it can wait.
+    if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
+      //mark attacks on null spaces as missed
+      if ( playGrid[row][col] === null ) playGrid[row][col] = 'miss';
+      //check if space is occupied with a ship... use a switch on the space's shipName string?
+      
 
+    } else throw new Error('attack out of bounds'); //when space out of bounds
 
+    //determine if the attack hit a ship and call it's hit method
+    //make help fn similar to isValid...
 
   }
 
