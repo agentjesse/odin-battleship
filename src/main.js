@@ -154,3 +154,12 @@ export const makeGameboard = ()=> {
     allShipsSunk
   };
 };
+
+//fn to make player objects. player types are human or computer and have their own gameboard
+export const makePlayer = ()=> {
+  const gameboard = makeGameboard();
+
+  return {
+    getGameboard: ()=> gameboard
+  };
+};

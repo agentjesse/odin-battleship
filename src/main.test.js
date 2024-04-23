@@ -1,4 +1,4 @@
-import { makeShip, makeGameboard } from './main.js';
+import { makeShip, makeGameboard, makePlayer } from './main.js';
 import { logToConsole as lg, objectToString as ots, log2DStringArray } from './logger.js';
 
 test('use jsdom in this test file', () => {
@@ -6,7 +6,7 @@ test('use jsdom in this test file', () => {
   expect(element).not.toBeNull();
 });
 
-test('ship objects creation with: length, hitsReceived, isSunk', () => {
+test('ship obj creation with: length, hitsReceived, isSunk', () => {
   //make a default 2 length ship, sink it
   const testShip = makeShip('Patrol Boat');
   testShip.hitShip();
@@ -18,7 +18,7 @@ test('ship objects creation with: length, hitsReceived, isSunk', () => {
   expect(testShip.shipName).toBe('Patrol Boat');
 });
 
-test('gameboard creation', ()=> {
+test('gameboard obj creation', ()=> {
   //make 10x10 Gameboard instance
   const board = makeGameboard();
   //check board methods
@@ -55,7 +55,7 @@ test('gameboard creation', ()=> {
   // log2DStringArray( board.getPlayGrid() );
 });
 
-test('more gameboard tests', ()=> {
+test('more gameboard obj tests', ()=> {
   //make 10x10 Gameboard instance
   const board = makeGameboard();
   //check board methods
@@ -76,4 +76,14 @@ test('more gameboard tests', ()=> {
 
   //visualize board
   // log2DStringArray( board.getPlayGrid() );
+});
+
+test('player obj creation', ()=> {
+  //make two human players
+  const player1 = makePlayer();
+  const player2 = makePlayer();
+  //check board / playGrid array made with nulls to start
+  expect( player1.getGameboard().getPlayGrid()[0][0] ).toBeNull();
+  expect( player1.getGameboard().getPlayGrid()[9][9] ).toBeNull();
+
 });
