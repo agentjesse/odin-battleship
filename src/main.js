@@ -155,11 +155,13 @@ export const makeGameboard = ()=> {
   };
 };
 
-//fn to make player objects. player types are human or computer and have their own gameboard
-export const makePlayer = ()=> {
+//fn to make player objects. player types are 'human' or 'computer' and have their own gameboard
+export const makePlayer = (name, type = 'human')=> {
   const gameboard = makeGameboard();
 
   return {
-    getGameboard: ()=> gameboard
+    getGameboard: ()=> gameboard,
+    getName: ()=> name,
+    getType: ()=> type
   };
 };
