@@ -32,7 +32,6 @@ export const makeShip = ( shipName )=> {
       break;
     case 'Patrol Boat':
       length = 2;
-      break;
   }
 
   const hitShip = ()=> {
@@ -44,16 +43,17 @@ export const makeShip = ( shipName )=> {
     getLength: ()=> length,
     getHits: ()=> hits,
     isSunk: ()=> isSunk, // bool of sink state
-    hitShip // call when hit
+    hitShip, // call when hit
+    shipName
   };
 };
 
-//private method of makeGameboard to place a ship on board
-//todo: check what to return to gameboard...
-const _placeShip = ( startCoords, direction, shipName, playGrid )=> {
+//private makeGameboard fn to place a ship on board and return a ship obj. The board
+//marking part of placing a ship is done in this fn by editing the playGrid array.
+const _placeAndGetShip = ( startCoords, direction, shipName, playGrid )=> {
   const ship = makeShip(shipName);
   const markEnd = ship.getLength();
-  const possibleMarks = [];
+  const possibleMarkCoords = [];
 
   //fn to check if space is in bounds of 10 x 10 2D playGrid arr and free.
   const isValid = (row, col)=> {
@@ -75,29 +75,30 @@ const _placeShip = ( startCoords, direction, shipName, playGrid )=> {
   for (let markCount = 0; markCount < markEnd; markCount++) {
     switch (direction) {
       case 'up': //upwards marking
-        [newRow, newCol] = [startCoords[0] - markCount, startCoords[1]]; //reassign
-        if ( isValid( newRow, newCol ) ) possibleMarks.push( [newRow, newCol] );
+        [newRow, newCol] = [startCoords[0] - markCount, startCoords[1]]; //destructuring reassign
+        if ( isValid( newRow, newCol ) ) possibleMarkCoords.push( [newRow, newCol] );
         break;
       case 'right': //rightwards marking
         [newRow, newCol] = [startCoords[0], startCoords[1] + markCount];
-        if ( isValid( newRow, newCol ) ) possibleMarks.push( [newRow, newCol] );
+        if ( isValid( newRow, newCol ) ) possibleMarkCoords.push( [newRow, newCol] );
         break;
       case 'down': //downwards marking
         [newRow, newCol] = [startCoords[0] + markCount, startCoords[1]];
-        if ( isValid( newRow, newCol ) ) possibleMarks.push( [newRow, newCol] );
+        if ( isValid( newRow, newCol ) ) possibleMarkCoords.push( [newRow, newCol] );
         break;
       case 'left': //leftwards marking
         [newRow, newCol] = [startCoords[0], startCoords[1] - markCount];
-        if ( isValid( newRow, newCol ) ) possibleMarks.push( [newRow, newCol] );
+        if ( isValid( newRow, newCol ) ) possibleMarkCoords.push( [newRow, newCol] );
     }
   }
-  //mark board when total possible marks match ship length (only valid marks made)
-  if ( possibleMarks.length === ship.getLength() ) {
-    possibleMarks.forEach( (mark)=> {
-      playGrid[mark[0]][mark[1]] = shipName;
+  //mark board when total possible marks match ship length (i.e. only valid marks made)
+  if ( possibleMarkCoords.length === ship.getLength() ) {
+    possibleMarkCoords.forEach( (markCoords)=> {
+      playGrid[markCoords[0]][markCoords[1]] = shipName;
     } );
   }
-
+  //return ship to caller for saving
+  return ship;
 };
 
 //fn to make gameboard objects.
@@ -106,35 +107,39 @@ export const makeGameboard = ()=> {
   //2nd dimension array represents a board row, top to bottom. Each element of 2nd
   //dimension arrays represents a board column, left to right.
   const playGrid = [...Array(10)].map( ()=> Array(10).fill(null) );
+  //store made ships in this js Map for quick access:
+  const shipsMap = new Map();
 
-  //calls private _placeShip with playGrid reference
+  //this fn calls private _placeAndGetShip with playGrid reference and expects ship obj back
   const placeShip = (startCoords, direction, shipName,)=> {
-    _placeShip(startCoords, direction, shipName, playGrid);
+    //place ship by marking board in _placeAndGetShip, then set returned ship in shipsMap
+    shipsMap.set( shipName, _placeAndGetShip(startCoords, direction, shipName, playGrid) );
   };
 
   //fn to handle attack from coordinates. must call hit on ships, or record missed shot
   const receiveAttack = ( attackCoords )=> {
     const row = attackCoords[0];
     const col = attackCoords[1];
+    let playGridMark; //var to access playGrid mark easily
     //check in bounds spaces
-    //_placeShip isValid fn has Error throwing logic, extracting it can wait.
+    //* _placeAndGetShip isValid fn has Error throwing based logic, extracting it can wait.
     if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
-      //mark attacks on null spaces as missed
-      if ( playGrid[row][col] === null ) playGrid[row][col] = 'miss';
-      //check if space is occupied with a ship... use a switch on the space's shipName string?
-      
-
+      playGridMark = playGrid[row][col];
+      //if attacked space holds null, mark it with miss
+      if ( playGridMark === null ) {
+        playGrid[row][col] = 'miss';
+      } else { //call ship's hitShip(), then update mark
+        shipsMap.get(playGridMark).hitShip();
+        playGrid[row][col] = 'hit';
+      }
     } else throw new Error('attack out of bounds'); //when space out of bounds
-
-    //determine if the attack hit a ship and call it's hit method
-    //make help fn similar to isValid...
-
-  }
+  };
 
   return {
     getPlayGrid: ()=> playGrid,
     placeShip,
-    receiveAttack
+    receiveAttack,
+    getShipsMap: ()=> shipsMap
   };
 };
 

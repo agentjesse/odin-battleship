@@ -16,6 +16,7 @@ test('ship objects creation with: length, hitsReceived, isSunk', () => {
   expect(testShip.getLength()).toBe(2);
   expect(testShip.getHits()).toBe(2);
   expect(testShip.isSunk()).toBe(true);
+  expect(testShip.shipName).toBe('Patrol Boat');
 });
 
 test('gameboard creation', ()=> {
@@ -37,9 +38,23 @@ test('gameboard creation', ()=> {
   expect( ()=> board.receiveAttack([10, 0]) ).toThrow('attack out of bounds');
   board.receiveAttack([5, 0]);
   expect( board.getPlayGrid()[5][0] ).toBe('miss');
-  board.receiveAttack([0, 0]);
-  expect( board.getPlayGrid()[0][0] ).toBe('hit');
-  //visualize
+  //sink carrier from: 9,9 to 5,9
+  board.receiveAttack([9, 9]);
+  board.receiveAttack([8, 9]);
+  board.receiveAttack([7, 9]);
+  board.receiveAttack([6, 9]);
+  board.receiveAttack([5, 9]);
+  expect( board.getPlayGrid()[9][9] ).toBe('hit');//check playGrid arr mar
+  expect( board.getPlayGrid()[8][9] ).toBe('hit');
+  expect( board.getPlayGrid()[7][9] ).toBe('hit');
+  expect( board.getPlayGrid()[6][9] ).toBe('hit');
+  expect( board.getPlayGrid()[5][9] ).toBe('hit');
+  expect( board.getShipsMap().get('Carrier').getHits() ).toBe(5); //check hits
+  expect( board.getShipsMap().get('Carrier').isSunk() ).toBe(true);//check sunk
+
+  //visualize board
   log2DStringArray( board.getPlayGrid() );
+  //visualize ships
+  // board.getShipsMap().forEach( (val)=> lg(val) ); //not needed anymore due to tests
 
 });
