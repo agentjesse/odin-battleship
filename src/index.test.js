@@ -20,7 +20,7 @@ test('ship objects creation with: length, hitsReceived, isSunk', () => {
 });
 
 test('gameboard creation', ()=> {
-  //make 10x10 board instance
+  //make 10x10 Gameboard instance
   const board = makeGameboard();
   //check board methods
   //board should be 2D array of 100 null elements
@@ -53,8 +53,28 @@ test('gameboard creation', ()=> {
   expect( board.getShipsMap().get('Carrier').isSunk() ).toBe(true);//check sunk
 
   //visualize board
-  log2DStringArray( board.getPlayGrid() );
-  //visualize ships
-  // board.getShipsMap().forEach( (val)=> lg(val) ); //not needed anymore due to tests
+  // log2DStringArray( board.getPlayGrid() );
+});
 
+test('more gameboard tests', ()=> {
+  //make 10x10 Gameboard instance
+  const board = makeGameboard();
+  //check board methods
+  //place ships with 3 args: startCoords, direction, ship name
+  board.placeShip( [0, 0], 'right', 'Patrol Boat' ); //length 2
+  board.placeShip( [9, 9], 'up', 'Carrier' ); //length 5
+  //sink patrol boat from 0,0 to 0,1
+  board.receiveAttack([0, 0]);
+  board.receiveAttack([0, 1]);
+  expect( board.getPlayGrid()[0][0] ).toBe('hit');//check playGrid arr mar
+  expect( board.getPlayGrid()[0][1] ).toBe('hit');
+  expect( board.getShipsMap().get('Patrol Boat').getHits() ).toBe(2); //check hits
+  expect( board.getShipsMap().get('Patrol Boat').isSunk() ).toBe(true);//check sunk
+  //carrier still floating
+  expect( board.getShipsMap().get('Carrier').isSunk() ).toBe(false);//check sunk
+  //check if all ships sunk
+  expect( board.allShipsSunk() ).toBe(false);
+
+  //visualize board
+  log2DStringArray( board.getPlayGrid() );
 });

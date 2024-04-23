@@ -1,6 +1,6 @@
 /* Next task:
--Create a Gameboard factory:
-Gameboards should have receiveAttack fn that takes coordinates, determines if the attack hit a ship, and then calls ‘hit’ on the correct ship.
+-Create a Player class/factory.
+There will be two types of players: real and pc. Each player object should contain it’s own gameboard.
 
 -update logger file, index.js imports examples, eslint config, package.json in boilerplate
 */
@@ -135,11 +135,26 @@ export const makeGameboard = ()=> {
     } else throw new Error('attack out of bounds'); //when space out of bounds
   };
 
+  //fn to return boolean based on all ships' sunk states.
+  //The some() CB checks if any ship is floating, answering: 'are all ships sunk?'.
+  //If floating ship found, some() immediately returns true. The result is then
+  //inversed before returning from allShipsSunk()
+  const allShipsSunk = ()=> ![...shipsMap.values()].some( (ship)=> !ship.isSunk() );
+  /* old checking code, clear and fine but long.
+  let res = true; let done;
+  shipsMap.forEach( (val)=> {
+    if ( done ) return;
+    //if any ship is not sunk, return false
+    if ( !val.isSunk() ) { res = false; done = true; } } );
+  return res;
+  */
+
   return {
     getPlayGrid: ()=> playGrid,
     placeShip,
     receiveAttack,
-    getShipsMap: ()=> shipsMap
+    getShipsMap: ()=> shipsMap,
+    allShipsSunk
   };
 };
 
