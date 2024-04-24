@@ -15,7 +15,10 @@ import { logToConsole as lg, tableToConsole as tb, objectToString as ots } from 
 //Main Project wrapped in initializer function to not have it's top level code execute when jest
 //imports this file.
 const initProject = ()=> {
+  //IIFE to control game flow. setup player/board states , UI, listeners, etc..
+  const gameFlow = ( ()=> {
 
+  })();
 
   // Remove the initProject event listener
   document.removeEventListener('DOMContentLoaded', initProject);

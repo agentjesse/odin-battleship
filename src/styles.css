@@ -9,24 +9,25 @@ button { display: block; cursor: pointer; }
 /* .roboto { font-family: "Roboto"; font-weight: 400,500; font-style: normal; } */
 /* variables---------------------------------------------------------------- */
 :root{
-  --grey1: hsl(214 48% 82%);
-  --grey2: hsl(214 32% 91%);
+  --grey1: hsl(214 27% 82%);
+  --grey2: hsl(214 0% 70%);
 
   --black: hsl(0, 0%, 0%);
   --white: hsl(0, 0%, 100%);
   --transparent: hsl(0, 0%, 0%, 0); /*for gradients*/
-  /* tailwind blue palette based, then hue shifted */
-  --bg950: hsl(199, 91%, 9%);
-  --bg900: hsl(197, 86%, 16%);
-  --bg800: hsl(196, 88%, 20%);
-  --bg700: hsl(196, 94%, 24%);
-  --bg600: hsl(194, 94%, 30%);
-  --mg500: hsl(193, 84%, 39%);
-  --fg400: hsl(191, 64%, 52%);
-  --fg300: hsl(189, 72%, 67%);
-  --fg200: hsl(185, 76%, 80%);
-  --fg100: hsl(182, 80%, 90%);
-  --fg50:  hsl(185, 81%, 96%);
+  
+  /* modded tailwind sky palette */
+  --bg950: hsl(204, 80%, 8%);
+  --bg900: hsl(204, 80%, 15%);
+  --bg800: hsl(202, 90%, 23%);
+  --bg700: hsl(201, 90%, 33%);
+  --bg600: hsl(201, 98%, 40%);
+  --mg500: hsl(200, 98%, 52%);
+  --fg400: hsl(200, 98%, 66%);
+  --fg300: hsl(199, 98%, 74%);
+  --fg200: hsl(199, 98%, 82%);
+  --fg100: hsl(199, 96%, 88%);
+  --fg50: hsl(204, 94%, 96%); /* or use white var */
 }
 
 /* main CSS */
@@ -34,8 +35,47 @@ body{
   font-family: 'Roboto', Arial, Helvetica, sans-serif;
   font-weight: 400;
   background-color: var(--grey1);
+
   h1 {
     text-align: center;
     margin-top: 1rem;
+  }
+}
+
+.setupControlsWrap {
+  display: flex;
+  justify-content: center;
+  /* background-color: var(--fg50); */
+  width: 30rem;
+  margin: 0 auto;
+  gap: 0.25rem;
+
+  .btnsWrap {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    background-color: var(--fg100);
+    gap: 0.25rem;
+
+    span {
+      flex-basis: 68%;
+    }
+
+    button {
+      flex-basis: 40%;
+      background-color: var(--bg600);
+      color: var(--white);
+      border: 6px outset var(--bg700);
+      border-radius: 1.5rem;
+    }
+    button:hover {
+      background-color: var(--fg200);
+    }
+    button[disabled] {
+      background-color: var(--grey2);
+      cursor: default;
+      border-color: var(--grey2);
+    }
   }
 }
