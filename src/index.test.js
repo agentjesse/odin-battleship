@@ -1,4 +1,4 @@
-// import {  } from './index.js'; //uncomment when TDD begins
+// import {  } from './index.js'; //uncomment and use this file once you learn UI mocking for jest
 import { logToConsole as lg, objectToString as ots, log2DStringArray } from './logger.js';
 
 test('use jsdom in this test file', () => {

@@ -52,20 +52,20 @@ const _placeAndGetShip = ( startCoords, direction, shipName, playGrid )=> {
   const markEnd = ship.getLength();
   const possibleMarkCoords = [];
 
-  //fn to check if space is in bounds of 10 x 10 2D playGrid arr and free.
+  //fn to check if cell is in bounds of 10 x 10 2D playGrid arr and free.
   const isValid = (row, col)=> {
     if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
-      //check if space is occupied
+      //check if cell is occupied
       if ( playGrid[row][col] === null ) return true;
-      throw new Error('space occupied'); //when space has a ship
+      throw new Error('cell occupied'); //when cell has a ship
       //*throw statement immediately ends fn execution. control then passed to first
       //catch block in the call stack. program terminates if no catch block exists
       //among caller functions.
     }
-    throw new Error('space out of bounds'); //when space out of bounds
+    throw new Error('cell out of bounds'); //when cell out of bounds
   };
 
-  //place ship on board by checking if all spaces valid to mark with ship name.
+  //place ship on board by checking if all cells valid to mark with ship name.
   //consider direction and gather possible marks from start in an array
   let newRow;
   let newCol;
@@ -100,9 +100,11 @@ const _placeAndGetShip = ( startCoords, direction, shipName, playGrid )=> {
 
 //fn to make gameboard objects.
 export const makeGameboard = ()=> {
-  //start with 10 x 10 2D grid array of nulls. Top left board coordinates are 0,0. Each
-  //2nd dimension array represents a board row, top to bottom. Each element of 2nd
-  //dimension arrays represents a board column, left to right.
+  //start with 10 x 10 2D playGrid array of null elements, representing board cells.
+  //Cells can change to hold data strings of the cell state: hit/miss/shipName.
+  //Top left board cell coordinates are 0,0. Each 2nd dimension array maps to a board
+  //row, top to bottom. Each element of 2nd dimension arrays maps to a board column,
+  //from left to right.
   const playGrid = [...Array(10)].map( ()=> Array(10).fill(null) );
   //store made ships in this js Map for quick access:
   const shipsMap = new Map();
@@ -118,18 +120,18 @@ export const makeGameboard = ()=> {
     const row = attackCoords[0];
     const col = attackCoords[1];
     let playGridMark; //var to access playGrid mark easily
-    //check in bounds spaces
+    //check in bounds cells
     //* _placeAndGetShip isValid fn has Error throwing based logic, extracting it can wait.
     if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
       playGridMark = playGrid[row][col];
-      //if attacked space holds null, mark it with miss
+      //if attacked cell holds null, mark it with miss
       if ( playGridMark === null ) {
         playGrid[row][col] = 'miss';
       } else { //call ship's hitShip(), then update mark
         shipsMap.get(playGridMark).hitShip();
         playGrid[row][col] = 'hit';
       }
-    } else throw new Error('attack out of bounds'); //when space out of bounds
+    } else throw new Error('attack out of bounds'); //when cell out of bounds
   };
 
   //fn to return boolean based on all ships' sunk states.

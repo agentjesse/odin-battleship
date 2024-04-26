@@ -28,6 +28,13 @@ button { display: block; cursor: pointer; }
   --fg200: hsl(199, 98%, 82%);
   --fg100: hsl(199, 96%, 88%);
   --fg50: hsl(204, 94%, 96%); /* or use white var */
+
+  /*boat colors*/
+  --patrolBoatColor:hsl(181, 100%, 40%);
+  --destroyerColor: hsl(181, 100%, 33%);
+  --submarineColor: hsl(181, 100%, 26%);
+  --battleshipColor:hsl(181, 100%, 19%);
+  --carrierColor:   hsl(181, 100%, 12%);
 }
 
 /* main CSS */
@@ -42,11 +49,50 @@ body{
   }
 }
 
-#boardsDiv {
-  width: 40rem;
+#boardsAndLabelsDiv {
+  max-width: 56.25rem;
   margin: 0.25rem auto;
   background-color: var(--fg50);
+  display: flex;
+  flex-wrap: wrap;
 
+  span {
+    flex-basis: 50%;
+    text-align: center;
+  }
+
+  #playerBoardsWrap{
+    flex-basis: 100%;
+    display: flex;
+    gap: 1rem;
+
+    .receivingBoardDiv, .attackingBoardDiv {
+      display: grid;
+      grid-template: repeat(10, 1fr) / repeat(10, 1fr);
+      gap: 0.125rem;
+      width: 50%;
+    }
+
+    .cellDiv {
+      border: 1px solid var(--bg900);
+      aspect-ratio: 1/1; /*match "auto" width or height to aspect ratio*/
+    }
+    [data-cell-data="Patrol Boat"] {
+      background-color: var(--patrolBoatColor);
+    }
+    [data-cell-data="Destroyer"] {
+      background-color: var(--destroyerColor);
+    }
+    [data-cell-data="Submarine"] {
+      background-color: var(--submarineColor);
+    }
+    [data-cell-data="Battleship"] {
+      background-color: var(--battleshipColor);
+    }
+    [data-cell-data="Carrier"] {
+      background-color: var(--carrierColor);
+    }
+  }
 }
 
 .setupControlsWrap {

@@ -31,8 +31,8 @@ test('gameboard obj creation', ()=> {
   board.placeShip( [6, 8], 'down', 'Battleship' ); //length 4
   board.placeShip( [9, 9], 'up', 'Carrier' ); //length 5
   //out of bounds / occupied placement tests
-  expect( ()=> board.placeShip( [0, 0], 'right', 'Carrier' ) ).toThrow('space occupied');
-  expect( ()=> board.placeShip( [0, 9], 'right', 'Carrier' ) ).toThrow('space out of bounds');
+  expect( ()=> board.placeShip( [0, 0], 'right', 'Carrier' ) ).toThrow('cell occupied');
+  expect( ()=> board.placeShip( [0, 9], 'right', 'Carrier' ) ).toThrow('cell out of bounds');
   //received attack tests
   expect( ()=> board.receiveAttack([10, 0]) ).toThrow('attack out of bounds');
   board.receiveAttack([5, 0]);
