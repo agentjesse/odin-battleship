@@ -28,6 +28,10 @@ const initProject = ()=> {
 
   //fn to re-render a player's 2 boards; call after data changes in either player's playGrid arrays
   const reRenderBoards = ()=> {
+    lg('re-rendering boards...');//debug
+    //cleanup old cells
+    receivingBoardDiv.textContent = '';
+    attackingBoardDiv.textContent = '';
     //build current player's receiving and attacking boards
     player1.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
       // lg(rowArr.join()); //debug
@@ -37,7 +41,6 @@ const initProject = ()=> {
         cellDiv.classList.add('cellDiv');
         cellDiv.setAttribute( 'data-cell-data', data );
         cellDiv.setAttribute( 'data-coords', `${row},${col}` );
-        cellDiv.textContent = data ? '?' : ''; //temp visuals...
         receivingBoardDiv.append( cellDiv );
       } );
     } );
@@ -47,7 +50,7 @@ const initProject = ()=> {
         //make and append cell divs from data
         const cellDiv = document.createElement('div');
         cellDiv.classList.add('cellDiv');
-        // cellDiv.setAttribute( 'data-cell-data', data ); //this shows enemy ships
+        // cellDiv.setAttribute( 'data-cell-data', data ); //show enemy ships
         cellDiv.setAttribute( 'data-coords', `${row},${col}` );
         cellDiv.textContent = '?'; //temp enemy visuals...
         attackingBoardDiv.append( cellDiv );
@@ -56,27 +59,42 @@ const initProject = ()=> {
 
   };
 
-  //begin game by listening for chosen game type, enabling start btns, and creating player objects
+  const sendAttack = (evt)=> {
+    const cellDiv = evt.target;
+    lg(cellDiv);
+  };
+
+  //listener for buttons in setupControlsWrap
+  //begin game from btn of chosen game type
   document.querySelector('.setupControlsWrap').addEventListener('click', (e)=> {
     e.stopPropagation;
-    //set game type for 2P (battle other player)
-    if (e.target.id === 'playOtherPlayerBtn') {
-      gameType = '2P'; //set gameType
-      [startBtn, restartBtn].forEach( (c)=> c.removeAttribute('disabled') ); //enable btns
-      //make players, populate their boards, assign their vars
-      [player1, player2] = [player1, player2].map( (player)=> {
-        player = makePlayer(); //makes player obj with default 'human' type
-        //populate player's board with default ships for now...
-        player.getGameboard().placeShip( [0, 0], 'right', 'Patrol Boat' );
-        player.getGameboard().placeShip( [1, 2], 'left', 'Destroyer' );
-        return player; //return player obj to .map() for destructuring assignment
-      } );
-      //render from player boards
-      reRenderBoards();
-    }
-    //set game type for 1P (battle computer) ...not implemented yet...
-    if (e.target.id === 'playComputerBtn') {
-      gameType = '1P';
+    switch (e.target.id) {
+      //when 2P (battle other player) game type chosen...
+      case 'playOtherPlayerBtn':
+        gameType = '2P';
+        //make players, populate their boards, assign their vars
+        [player1, player2] = [player1, player2].map((player) => {
+          player = makePlayer(); //makes player obj with default 'human' type
+          //populate player's board with default ships for now...
+          player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+          player.getGameboard().placeShip([1, 2], 'left', 'Destroyer');
+          return player; //return player obj to .map() for destructuring assignment
+        });
+        //enable next btns
+        [startBtn, restartBtn].forEach((c) => c.removeAttribute('disabled'));
+        reRenderBoards();//render from boards
+        break;
+      //when 1P (battle computer) game type chosen...
+      case 'playComputerBtn':
+        gameType = '1P';
+        break;
+      //start listening for clicks when start btn clicked
+      case 'startBtn':
+        //handle attacking board cell clicks
+        attackingBoardDiv.addEventListener('click', sendAttack );
+        break;
+      case 'restartBtn':
+        break;
     }
 
   });
