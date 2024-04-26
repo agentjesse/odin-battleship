@@ -42,6 +42,8 @@ body{
   font-family: 'Roboto', Arial, Helvetica, sans-serif;
   font-weight: 400;
   background-color: var(--grey1);
+  max-width: 56.25rem;
+  margin: 0 auto;
 
   h1 {
     text-align: center;
@@ -50,7 +52,6 @@ body{
 }
 
 #boardsAndLabelsDiv {
-  max-width: 56.25rem;
   margin: 0.25rem auto;
   background-color: var(--fg50);
   display: flex;
@@ -95,10 +96,14 @@ body{
   }
 }
 
+#messageDiv {
+  margin: 0 auto 0.25rem;
+  text-align: center;
+}
+
 .setupControlsWrap {
   display: flex;
   justify-content: center;
-  /* background-color: var(--fg50); */
   width: 20rem;
   margin: 0 auto;
   gap: 0.25rem;

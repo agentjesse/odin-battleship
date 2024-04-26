@@ -24,6 +24,7 @@ const initProject = ()=> {
   let gameType; //assign '1P'/'2P' when button clicked
   let player1; //player object
   let player2;
+  let currentPlayer; //player object
 
   //fn to re-render a player's 2 boards; call after data changes in either player's playGrid arrays
   const reRenderBoards = ()=> {
