@@ -39,8 +39,9 @@ const initProject = ()=> {
         //make and append cell divs from data
         const cellDiv = document.createElement('div');
         cellDiv.classList.add('cellDiv');
-        cellDiv.setAttribute( 'data-cell-data', data );
-        cellDiv.setAttribute( 'data-coords', `${row},${col}` );
+        cellDiv.dataset.cellData = data;
+        cellDiv.dataset.row = row;
+        cellDiv.dataset.col = col;
         receivingBoardDiv.append( cellDiv );
       } );
     } );
@@ -51,7 +52,8 @@ const initProject = ()=> {
         const cellDiv = document.createElement('div');
         cellDiv.classList.add('cellDiv');
         // cellDiv.setAttribute( 'data-cell-data', data ); //show enemy ships
-        cellDiv.setAttribute( 'data-coords', `${row},${col}` );
+        cellDiv.dataset.row = row;
+        cellDiv.dataset.col = col;
         cellDiv.textContent = '?'; //temp enemy visuals...
         attackingBoardDiv.append( cellDiv );
       } );
@@ -59,9 +61,12 @@ const initProject = ()=> {
 
   };
 
+  //fn to handle sending an attack to opponent board
   const sendAttack = (evt)=> {
-    const cellDiv = evt.target;
-    lg(cellDiv);
+    //get attack coords from clicked cell div
+    const row = evt.target.dataset.row;
+    const col = evt.target.dataset.col;
+    lg(`${ row },${ col }`);
   };
 
   //listener for buttons in setupControlsWrap
