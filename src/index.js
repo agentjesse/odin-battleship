@@ -35,14 +35,16 @@ const initProject = ()=> {
   let currentPlayer; //turn references
   let opponent;
 
-  //fn to render a player's 2 boards; call after data changes in either player's playGrid arrays
+  //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
-    lg('rendering boards...');//debug
+    lg('rendering boards, current player has playGrid arr:'); //debug
+    lg( currentPlayer.getGameboard().getPlayGrid() ); //debug
+    // lg('rendering boards...');//debug
     //cleanup old cells
     receivingBoardDiv.textContent = '';
     attackingBoardDiv.textContent = '';
     //build current player's receiving and attacking boards
-    player1.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
+    currentPlayer.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
       // lg(rowArr.join()); //debug
       rowArr.forEach( (data, col)=> {
         //make and append cell divs from data
@@ -54,7 +56,7 @@ const initProject = ()=> {
         receivingBoardDiv.append( cellDiv );
       } );
     } );
-    player2.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
+    opponent.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
       // lg(rowArr.join()); //debug
       rowArr.forEach( (data, col)=> {
         //make and append cell divs from data
@@ -69,7 +71,7 @@ const initProject = ()=> {
 
   };
 
-  //fn to handle sending an attack to opponent board
+  //listener cb fn to handle sending an attack to opponent board
   const sendAttack = (e)=> {
     e.stopPropagation();
     //using conditional since border clicks trigger listener cb
@@ -79,32 +81,31 @@ const initProject = ()=> {
       //save attack result to only handle a hit or miss
       const attackRes = opponentBoard.receiveAttack([e.target.dataset.row, e.target.dataset.col]);
       renderBoards();//show result to current player
-      lg(opponentBoard.getPlayGrid());//debug
-      //set message according to attack result
-      msgDiv.textContent = ''; //clear old message first
-      switch (attackRes) {
-        case 'hit':
-          msgDiv.textContent = 'Attack hit!';
-          break;
-        case 'miss':
-          msgDiv.textContent = 'Attack missed!';
-      }
+      // lg(opponentBoard.getPlayGrid());//debug
       //handle game over when opponent's all ships sunk
-      if ( opponentBoard.allShipsSunk() ) {
-        msgDiv.textContent = `Player${currentPlayer === player1 ? '1' : '2'} wins!`;
-        //disable attackingBoardDiv
+      if (opponentBoard.allShipsSunk()) {
+        //disable attackingBoardDiv, inform player
         attackingBoardDiv.removeEventListener('click', sendAttack);
+        msgDiv.textContent = `Player${ currentPlayer === player1 ? '1' : '2' } wins!`;
         //implement way to restart game...
 
-      //handle next player's turn: swap players, wait a little to display passDeviceDiv,
-      //wait for current player to pass play device to next player, and wait for next
-      //player to press continueBtn to begin their turn
+      //handle next player's turn: show result msg, wait a little to hide boards, show
+      //passDeviceDiv, let current player pass play device to next player, wait for
+      //next player to press continueBtn to begin their turn
       } else {
-        currentPlayer = opponent;
+        //set message according to attack result
+        msgDiv.textContent = ''; //clear old message
+        switch (attackRes) { //only handle attack results we want
+          case 'hit':
+            msgDiv.textContent = 'Attack hit!';
+            break;
+          case 'miss':
+            msgDiv.textContent = 'Attack missed!';
+        }
         setTimeout(() => {
           boardsAndLabelsDiv.style.display = 'none';
           passDeviceDiv.style.display = 'block';
-        }, 1500); //change time for prod...
+        }, 700); //change to 2000 for prod...
       }
 
     }
@@ -113,7 +114,13 @@ const initProject = ()=> {
   //fn to move to next player when continueBtn clicked
   const continueToNextPlayer = (e)=> {
     e.stopPropagation();
-    
+    //swap players
+    currentPlayer = opponent;
+    //restore boards div, hide passDeviceDiv
+    boardsAndLabelsDiv.style.display = 'flex';
+    passDeviceDiv.style.display = 'none';
+    //render next player's boards
+    renderBoards();
 
   };
 
