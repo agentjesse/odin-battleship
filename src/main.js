@@ -116,7 +116,7 @@ export const makeGameboard = ()=> {
   };
 
   //fn to handle attack from coordinates. must call hit on ships, or record missed shot.
-  //returns new mark for UI updates and error handling from previously marked cells
+  //returns new mark for UI updates, which is used for handling previously marked cells
   const receiveAttack = ( attackCoords )=> {
     const row = attackCoords[0];
     const col = attackCoords[1];

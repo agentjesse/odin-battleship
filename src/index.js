@@ -37,9 +37,8 @@ const initProject = ()=> {
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
-    lg('rendering boards, current player has playGrid arr:'); //debug
+    lg('rendering boards. current player has playGrid arr:'); //debug
     lg( currentPlayer.getGameboard().getPlayGrid() ); //debug
-    // lg('rendering boards...');//debug
     //cleanup old cells
     receivingBoardDiv.textContent = '';
     attackingBoardDiv.textContent = '';
@@ -76,36 +75,38 @@ const initProject = ()=> {
     e.stopPropagation();
     //using conditional since border clicks trigger listener cb
     if (e.target.className === 'cellDiv') {
-      //call receiveAttack fn with coords on opponent's gameboard
+      //call receiveAttack fn on opponent's gameboard, save result for display logic
       const opponentBoard = opponent.getGameboard();
-      //save attack result to only handle a hit or miss
       const attackRes = opponentBoard.receiveAttack([e.target.dataset.row, e.target.dataset.col]);
-      renderBoards();//show result to current player
-      // lg(opponentBoard.getPlayGrid());//debug
-      //handle game over when opponent's all ships sunk
-      if (opponentBoard.allShipsSunk()) {
-        //disable attackingBoardDiv, inform player
-        attackingBoardDiv.removeEventListener('click', sendAttack);
-        msgDiv.textContent = `Player${ currentPlayer === player1 ? '1' : '2' } wins!`;
-        //implement way to restart game...
-
-      //handle next player's turn: show result msg, wait a little to hide boards, show
-      //passDeviceDiv, let current player pass play device to next player, wait for
-      //next player to press continueBtn to begin their turn
-      } else {
-        //set message according to attack result
-        msgDiv.textContent = ''; //clear old message
-        switch (attackRes) { //only handle attack results we want
-          case 'hit':
-            msgDiv.textContent = 'Attack hit!';
-            break;
-          case 'miss':
-            msgDiv.textContent = 'Attack missed!';
+      // lg(attackRes) //debug
+      //only re-render when attackRes is useful value like 'hit'/'miss'
+      if (attackRes) {
+        renderBoards();//show result to current player
+        //handle game over when all opponent's ships sunk
+        if (opponentBoard.allShipsSunk()) {
+          //disable attackingBoardDiv, inform player
+          attackingBoardDiv.removeEventListener('click', sendAttack);
+          msgDiv.textContent = `Player${ currentPlayer === player1 ? '1' : '2' } wins!`;
+          //implement logic to restart game with the restartBtn...
+  
+        //handle next player's turn: show result msg, wait a little to hide boards, show
+        //passDeviceDiv, let current player pass play device to next player, wait for
+        //next player to press continueBtn to begin their turn
+        } else {
+          //set message according to attack result
+          // msgDiv.textContent = ''; //clear old message
+          switch (attackRes) { //only handle attack results we want
+            case 'hit':
+              msgDiv.textContent = 'Attack hit!';
+              break;
+            case 'miss':
+              msgDiv.textContent = 'Attack missed!';
+          }
+          setTimeout(() => {
+            boardsAndLabelsDiv.style.display = 'none';
+            passDeviceDiv.style.display = 'block';
+          }, 400); //change this little wait to 2000 for prod...
         }
-        setTimeout(() => {
-          boardsAndLabelsDiv.style.display = 'none';
-          passDeviceDiv.style.display = 'block';
-        }, 700); //change to 2000 for prod...
       }
 
     }
@@ -114,14 +115,11 @@ const initProject = ()=> {
   //fn to move to next player when continueBtn clicked
   const continueToNextPlayer = (e)=> {
     e.stopPropagation();
-    //swap players
-    currentPlayer = opponent;
-    //restore boards div, hide passDeviceDiv
-    boardsAndLabelsDiv.style.display = 'flex';
-    passDeviceDiv.style.display = 'none';
-    //render next player's boards
+    [opponent, currentPlayer] = [currentPlayer, opponent]; //swap players
+    boardsAndLabelsDiv.style.display = 'flex'; //restore boards div
+    passDeviceDiv.style.display = 'none'; //hide
+    msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' }'s attack turn...`;
     renderBoards();
-
   };
 
   //listener for buttons in setupControlsWrap
