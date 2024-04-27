@@ -79,33 +79,25 @@ const initProject = ()=> {
       const opponentBoard = opponent.getGameboard();
       const attackRes = opponentBoard.receiveAttack([e.target.dataset.row, e.target.dataset.col]);
       // lg(attackRes) //debug
-      //only re-render when attackRes is useful value like 'hit'/'miss'
+      //only re-render when attackRes holds a useful value: 'hit'/'miss'
       if (attackRes) {
         renderBoards();//show result to current player
         //handle game over when all opponent's ships sunk
         if (opponentBoard.allShipsSunk()) {
           //disable attackingBoardDiv, inform player
           attackingBoardDiv.removeEventListener('click', sendAttack);
-          msgDiv.textContent = `Player${ currentPlayer === player1 ? '1' : '2' } wins!`;
+          msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' } wins!`;
           //implement logic to restart game with the restartBtn...
   
-        //handle next player's turn: show result msg, wait a little to hide boards, show
-        //passDeviceDiv, let current player pass play device to next player, wait for
-        //next player to press continueBtn to begin their turn
+        //handle next player's turn: show attack result message, wait a little to hide
+        //boards and show passDeviceDiv. After that, we wait for the device pass, and for
+        //next player to press the continue button with the continueToNextPlayer cb fn.
         } else {
-          //set message according to attack result
-          // msgDiv.textContent = ''; //clear old message
-          switch (attackRes) { //only handle attack results we want
-            case 'hit':
-              msgDiv.textContent = 'Attack hit!';
-              break;
-            case 'miss':
-              msgDiv.textContent = 'Attack missed!';
-          }
+          msgDiv.textContent = attackRes === 'hit' ? 'Attack hit!' : 'Attack missed!';
           setTimeout(() => {
             boardsAndLabelsDiv.style.display = 'none';
             passDeviceDiv.style.display = 'block';
-          }, 400); //change this little wait to 2000 for prod...
+          }, 400); //change this little wait to 2s for prod...
         }
       }
 
@@ -117,7 +109,7 @@ const initProject = ()=> {
     e.stopPropagation();
     [opponent, currentPlayer] = [currentPlayer, opponent]; //swap players
     boardsAndLabelsDiv.style.display = 'flex'; //restore boards div
-    passDeviceDiv.style.display = 'none'; //hide
+    passDeviceDiv.style.display = 'none';
     msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' }'s attack turn...`;
     renderBoards();
   };
