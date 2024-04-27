@@ -29,12 +29,14 @@ button { display: block; cursor: pointer; }
   --fg100: hsl(199, 96%, 88%);
   --fg50: hsl(204, 94%, 96%); /* or use white var */
 
-  /*boat colors*/
-  --patrolBoatColor:hsl(181, 100%, 40%);
-  --destroyerColor: hsl(181, 100%, 33%);
-  --submarineColor: hsl(181, 100%, 26%);
-  --battleshipColor:hsl(181, 100%, 19%);
-  --carrierColor:   hsl(181, 100%, 12%);
+  /*boat,hit,miss colors*/
+  --patrolBoatColor:hsl(181, 100%, 34%); 
+  --destroyerColor: hsl(181, 100%, 28%);
+  --submarineColor: hsl(181, 100%, 22%);
+  --battleshipColor:hsl(181, 100%, 17%);
+  --carrierColor:   hsl(181, 100%, 13%);
+  --hitColor: hsl(0, 100%, 44%);
+  --missColor: hsl(38, 100%, 78%);
 }
 
 /* main CSS */
@@ -51,6 +53,14 @@ body{
   }
 }
 
+#passDeviceDiv {
+  display: none;
+  background-color: var(--fg200);
+
+  #continueBtn {
+  }
+}
+
 #boardsAndLabelsDiv {
   margin: 0.25rem auto;
   background-color: var(--fg50);
@@ -62,41 +72,51 @@ body{
     text-align: center;
   }
 
-  #playerBoardsWrap{
+  #playerBoardsWrap {
     flex-basis: 100%;
     display: flex;
-    gap: 1rem;
+    gap: 0.25rem;
 
-    .receivingBoardDiv, .attackingBoardDiv {
+    .receivingBoardDiv,
+    .attackingBoardDiv {
       display: grid;
       grid-template: repeat(10, 1fr) / repeat(10, 1fr);
-      gap: 0.125rem;
       width: 50%;
+      border: 3px solid var(--mg500);
+    }
+    .receivingBoardDiv {
+      [data-cell-data="Patrol Boat"] {
+        background-color: var(--patrolBoatColor);
+      }
+      [data-cell-data="Destroyer"] {
+        background-color: var(--destroyerColor);
+      }
+      [data-cell-data="Submarine"] {
+        background-color: var(--submarineColor);
+      }
+      [data-cell-data="Battleship"] {
+        background-color: var(--battleshipColor);
+      }
+      [data-cell-data="Carrier"] {
+        background-color: var(--carrierColor);
+      }
+    }
+    
+    [data-cell-data="hit"] {
+      background-color: var(--hitColor);
+    }
+    [data-cell-data="miss"] {
+      background-color: var(--missColor);
     }
 
     .cellDiv {
       border: 1px solid var(--bg900);
       aspect-ratio: 1/1; /*match "auto" width or height to aspect ratio*/
     }
-    [data-cell-data="Patrol Boat"] {
-      background-color: var(--patrolBoatColor);
-    }
-    [data-cell-data="Destroyer"] {
-      background-color: var(--destroyerColor);
-    }
-    [data-cell-data="Submarine"] {
-      background-color: var(--submarineColor);
-    }
-    [data-cell-data="Battleship"] {
-      background-color: var(--battleshipColor);
-    }
-    [data-cell-data="Carrier"] {
-      background-color: var(--carrierColor);
-    }
   }
 }
 
-#messageDiv {
+#msgDiv {
   margin: 0 auto 0.25rem;
   text-align: center;
 }

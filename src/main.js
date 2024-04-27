@@ -1,6 +1,6 @@
 /* Next task:
--Create a Player class/factory... here, not in index.js
-There will be two types of players: real and pc. Each player object should contain it’s own gameboard.
+
+-handle attacks on played cells
 
 */
 
@@ -115,23 +115,30 @@ export const makeGameboard = ()=> {
     shipsMap.set( shipName, _placeAndGetShip(startCoords, direction, shipName, playGrid) );
   };
 
-  //fn to handle attack from coordinates. must call hit on ships, or record missed shot
+  //fn to handle attack from coordinates. must call hit on ships, or record missed shot.
+  //returns new mark for UI updates and error handling from previously marked cells
   const receiveAttack = ( attackCoords )=> {
     const row = attackCoords[0];
     const col = attackCoords[1];
-    let playGridMark; //var to access playGrid mark easily
     //check in bounds cells
     //* _placeAndGetShip isValid fn has Error throwing based logic, extracting it can wait.
     if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
-      playGridMark = playGrid[row][col];
-      //if attacked cell holds null, mark it with miss
-      if ( playGridMark === null ) {
-        playGrid[row][col] = 'miss';
-      } else { //call ship's hitShip(), then update mark
-        shipsMap.get(playGridMark).hitShip();
-        playGrid[row][col] = 'hit';
+      switch (playGrid[row][col]) {
+        //if attacked cell data is null, mark with miss
+        case null:
+          playGrid[row][col] = 'miss';
+          return 'miss';
+        //call ship's hitShip(), then update mark
+        case 'Patrol Boat':
+        case 'Destroyer':
+        case 'Submarine':
+        case 'Battleship':
+        case 'Carrier':
+          shipsMap.get(playGrid[row][col]).hitShip();
+          playGrid[row][col] = 'hit';
+          return 'hit';
       }
-    } else throw new Error('attack out of bounds'); //when cell out of bounds
+    } else throw new Error('attack out of bounds');
   };
 
   //fn to return boolean based on all ships' sunk states.
