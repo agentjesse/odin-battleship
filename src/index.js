@@ -32,7 +32,7 @@ const initProject = ()=> {
   let gameType; //assign '1P'/'2P' when button clicked
   let player1; //player objects with gameboards
   let player2;
-  let currentPlayer; //turn references
+  let currentPlayer; //turn reference vars
   let opponent;
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
@@ -79,7 +79,7 @@ const initProject = ()=> {
       const opponentBoard = opponent.getGameboard();
       const attackRes = opponentBoard.receiveAttack([e.target.dataset.row, e.target.dataset.col]);
       // lg(attackRes) //debug
-      //only re-render when attackRes holds a useful value: 'hit'/'miss'
+      //only re-render when attackRes holds a useful string like hit or miss
       if (attackRes) {
         renderBoards();//show result to current player
         //handle game over when all opponent's ships sunk
@@ -88,7 +88,8 @@ const initProject = ()=> {
           attackingBoardDiv.removeEventListener('click', sendAttack);
           msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' } wins!`;
           //implement logic to restart game with the restartBtn...
-  
+
+
         //handle next player's turn: show attack result message, wait a little to hide
         //boards and show passDeviceDiv. After that, we wait for the device pass, and for
         //next player to press the continue button with the continueToNextPlayer cb fn.
@@ -97,7 +98,7 @@ const initProject = ()=> {
           setTimeout(() => {
             boardsAndLabelsDiv.style.display = 'none';
             passDeviceDiv.style.display = 'block';
-          }, 400); //change this little wait to 2s for prod...
+          }, 500); //change this little wait to 2s for prod...
         }
       }
 
@@ -123,23 +124,19 @@ const initProject = ()=> {
       case 'playOtherPlayerBtn':
         gameType = '2P';
         //make players, populate their boards, assign their vars
-        [player1, player2] = [player1, player2].map((player) => {
-          player = makePlayer(); //makes player obj with default 'human' type
-          //populate player's board with default ships for now...
-          player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
-          // player.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
-          return player; //return player obj to .map() for destructuring assignment
-        });
-        //extra ship for board 2
-        player2.getGameboard().placeShip([1, 0], 'right', 'Submarine');
-        //set btns
-        startBtn.removeAttribute('disabled');
-        //player1 starts
-        [currentPlayer, opponent] = [player1, player2];
-        msgDiv.textContent = 'Player 1 goes first! click start to begin';
-        //before clicking start, add ship placement logic here...
+        [player1, player2] = [undefined, undefined].map((playerObj) => {
+          playerObj = makePlayer(); //makes player obj with default 'human' type
+           //add ship placement logic here...
 
-        renderBoards();
+          //populate player's board with default ships for now...
+          playerObj.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+          return playerObj; //return player obj to .map() for array destructuring assignment
+        });
+        //add extra ship for board 2 as a default for now...
+        player2.getGameboard().placeShip([1, 0], 'right', 'Submarine');
+        //inform starting player, enable startBtn
+        msgDiv.textContent = 'Player 1 goes first! click start to begin...';
+        startBtn.removeAttribute('disabled');
         break;
       //when 1P (battle computer) game type chosen...
       case 'playComputerBtn':
@@ -147,6 +144,9 @@ const initProject = ()=> {
         break;
       //start listening for clicks when start btn clicked
       case 'startBtn':
+        //assign current player and show their boards
+        [currentPlayer, opponent] = [player1, player2];
+        renderBoards();
         //set btns
         [playOtherPlayerBtn, playComputerBtn, startBtn]
           .forEach((c) => c.setAttribute('disabled', ''));
@@ -157,7 +157,17 @@ const initProject = ()=> {
         continueBtn.addEventListener('click', continueToNextPlayer );
         break;
       case 'restartBtn':
-        //implement...
+        lg('restarting game...');//debug
+        //when clicked, game boards/state should be reset, and player 1 asked to go first...
+        //reset boards..
+
+
+        //player1 starts again
+        [currentPlayer, opponent] = [player1, player2];
+        msgDiv.textContent = 'Game restarted. Player 1\'s attack turn...';
+        //re-add the attackingBoardDiv listener and it's cb removed by a game over.
+        //The browser keeps track of named fns added, avoiding duplicate attachments.
+        attackingBoardDiv.addEventListener('click', sendAttack);
         break;
     }
 
