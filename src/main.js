@@ -5,6 +5,7 @@
 // JS imports
 //include file extension For Node.js when importing local modules:
 import { logToConsole as lg, tableToConsole as tb, objectToString as ots } from './logger.js';
+import makeLinkedList from './linkedList.js';
 
 //jest testing for this file is in main.test.js and done with ES Module exports
 
@@ -165,19 +166,22 @@ export const makeGameboard = ()=> {
 //object composition fn. pass in computer player's gameboard as state, return an
 //object with computer methods for spreading
 const isComputer = (gameboard)=> {
-  //make array of [0,0] to [9,9] arrays representing attack coordinates. playGrid 2D array
-  //used for structure.
-  const coordsToTry = [];
+  //make linked list with node values of [0,0] to [9,9] arrays representing attack
+  //coordinates. Use gameboard's playGrid 2D array for structure.
+  const coordsToTry = makeLinkedList();
   gameboard.getPlayGrid().forEach( (rowArr, row)=> {
-    rowArr.forEach( (data, col)=> coordsToTry.push( [row, col] ) );
+    rowArr.forEach( (data, col)=> coordsToTry.append( [row, col] ) );
   } );
-
+  // lg(coordsToTry.getSize()); //debug
+  // lg(coordsToTry.toString()); //debug
+  
   //fn to get computer's next attack
   //implement queue for next moves if hit was made? note receiveAttack fn returns a 'hit' string...
   const getNextAttackCoords = ()=> {
-    //Access a coordinate array with a random index within the array size
-    //need to remove coordinate from array instead of just returning like below...
-    let attackCoords = coordsToTry[ Math.floor( Math.random() * coordsToTry.length ) ];
+    //get an attack coordinate using a random index within the linked list size. Use linked list
+    //removeAt fn to return the coordinate array node value and remove it from being tried again.
+    const attackCoords = coordsToTry.removeAt( Math.floor( Math.random() * coordsToTry.getSize() ) );
+    // lg(coordsToTry.getSize()); //debug
     return attackCoords;
   };
 
