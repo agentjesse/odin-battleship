@@ -115,6 +115,22 @@ const initProject = ()=> {
     renderBoards();
   };
 
+  //fn for default population of both player boards, for dev
+  //base a new fn off this one for random all ship placement in prod...
+  const defaultBoardsPopulation = ()=> {
+    //access boards via player1/2 vars...
+    [player1, player2].forEach( (player) => {
+      //populate player's board with default ships for now...
+      player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+      return player; //return player obj to .map() for array destructuring assignment
+    });
+    //add extra ship for board 2 for now...
+    player2.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
+    player2.getGameboard().placeShip([2, 0], 'right', 'Submarine');
+    player2.getGameboard().placeShip([3, 0], 'right', 'Battleship');
+    player2.getGameboard().placeShip([4, 0], 'right', 'Carrier');
+  };
+
   //listener for buttons in setupControlsWrap
   //begin game from btn of chosen game type
   document.querySelector('.setupControlsWrap').addEventListener('click', (e)=> {
@@ -123,17 +139,10 @@ const initProject = ()=> {
       //when 2P (battle other player) game type chosen...
       case 'playOtherPlayerBtn':
         gameType = '2P';
-        //make players, populate their boards, assign their vars
-        [player1, player2] = [undefined, undefined].map((playerObj) => {
-          playerObj = makePlayer(); //makes player obj with default 'human' type
-           //add ship placement logic here...
-
-          //populate player's board with default ships for now...
-          playerObj.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
-          return playerObj; //return player obj to .map() for array destructuring assignment
-        });
-        //add extra ship for board 2 as a default for now...
-        player2.getGameboard().placeShip([1, 0], 'right', 'Submarine');
+        //make and assign players, populate their boards
+        player1 = makePlayer();//makes player obj with default 'human' type
+        player2 = makePlayer();
+        defaultBoardsPopulation();//for dev...
         //inform starting player, enable startBtn
         msgDiv.textContent = 'Player 1 goes first! click start to begin...';
         startBtn.removeAttribute('disabled');
@@ -156,18 +165,22 @@ const initProject = ()=> {
         attackingBoardDiv.addEventListener('click', sendAttack);
         continueBtn.addEventListener('click', continueToNextPlayer );
         break;
+      //handle boards/state reset, game restart
       case 'restartBtn':
         lg('restarting game...');//debug
-        //when clicked, game boards/state should be reset, and player 1 asked to go first...
-        //reset boards..
-
-
-        //player1 starts again
-        [currentPlayer, opponent] = [player1, player2];
+        //restore boards if reset button pressed when passDeviceDiv active
+        boardsAndLabelsDiv.style.display = 'flex';
+        passDeviceDiv.style.display = 'none';
+        //reset boards by reassigning player1/2 to new player objects with null playGrid arrays
+        player1 = makePlayer();//player obj with default 'human' type
+        player2 = makePlayer();
+        defaultBoardsPopulation();//for dev...
+        [currentPlayer, opponent] = [player1, player2]; //player1 starts again
         msgDiv.textContent = 'Game restarted. Player 1\'s attack turn...';
         //re-add the attackingBoardDiv listener and it's cb removed by a game over.
-        //The browser keeps track of named fns added, avoiding duplicate attachments.
+        //browser tracks named fns added, avoids duplicate attachments.
         attackingBoardDiv.addEventListener('click', sendAttack);
+        renderBoards();
         break;
     }
 
