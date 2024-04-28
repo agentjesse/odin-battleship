@@ -1,7 +1,7 @@
 /* Next task:
 -Create UI after logic in main.js
 
--make the ‘computer’ players capable of making random plays. The computer does not have to be smart, but it should know whether or not a given move is legal (i.e. it shouldn’t shoot the same coordinate twice).
+-add restart logic for computer battles
 
 -turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
 */
@@ -70,20 +70,37 @@ const initProject = ()=> {
 
   };
 
-  //listener cb fn to handle sending an attack to opponent board
-  //need to handle what to do after attacks when player2 is computer, check gameType?...
+  //fn to get and handle computer's attacks. called by setTimeout after attacking computer
+  const getAndHandleComputerAttack = ()=> {
+    const compAtkRes = currentPlayer.getGameboard().receiveAttack(
+      opponent.getNextAttackCoords() //get computer's attack coordinates
+    );
+    renderBoards();//show computer's attack
+    msgDiv.textContent = compAtkRes === 'hit'
+      ? 'Computer\'s attack hit! Make your turn..'
+      : 'Computer\'s Attack missed! Make your turn..';
+    //check if computer won
+    if ( currentPlayer.getGameboard().allShipsSunk() ) {
+      //disable attackingBoardDiv, inform player
+      attackingBoardDiv.removeEventListener('click', sendAttack);
+      msgDiv.textContent = 'Computer wins!';
+    }
+  };
+
+  //listener cb fn to handle sending an attack to opponent board and handle
+  //computer retaliation attacks...
   const sendAttack = (e)=> {
     e.stopPropagation();
     //using conditional since div border clicks trigger listener cb
     if (e.target.className === 'cellDiv') {
       //call receiveAttack fn on opponent's gameboard, save result for display logic
-      const opponentBoard = opponent.getGameboard();
-      const attackRes = opponentBoard.receiveAttack([e.target.dataset.row, e.target.dataset.col]);
+      const attackRes = opponent.getGameboard()
+        .receiveAttack( [e.target.dataset.row, e.target.dataset.col] );
       //only re-render when attackRes is a useful string like hit or miss
       if (attackRes) {
         renderBoards();//show attack result to current player
         //handle game over when all opponent's ships sunk
-        if (opponentBoard.allShipsSunk()) {
+        if (opponent.getGameboard().allShipsSunk()) {
           //disable attackingBoardDiv, inform player
           attackingBoardDiv.removeEventListener('click', sendAttack);
           msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' } wins!`;
@@ -92,15 +109,15 @@ const initProject = ()=> {
         //next player to press the continue button with the continueToNextPlayer cb fn.
         } else {
           msgDiv.textContent = attackRes === 'hit' ? 'Attack hit!' : 'Attack missed!';
-          setTimeout(() => {
-            //here seems like good place to get computer player's attack and handle it...
+          setTimeout( () => {
+            //when battling computer, receive and show it's attacks
             if (gameType === '1P') {
-              lg( opponent.getNextAttackCoords() );
-              
+              getAndHandleComputerAttack();
+            //when battling other player, hide/show appropriate elements
+            } else {
+              boardsAndLabelsDiv.style.display = 'none';
+              passDeviceDiv.style.display = 'block';
             }
-
-            boardsAndLabelsDiv.style.display = 'none';
-            passDeviceDiv.style.display = 'block';
           }, 500); //change this little wait to 1.5s for prod...
         }
       }
@@ -129,13 +146,17 @@ const initProject = ()=> {
       [player1, player2].forEach( (player) => {
         //populate player's board with default ships for now...
         player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+        // player.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
+        // player.getGameboard().placeShip([2, 0], 'right', 'Submarine');
+        // player.getGameboard().placeShip([8, 0], 'right', 'Battleship');
+        // player.getGameboard().placeShip([9, 0], 'right', 'Carrier');
         return player; //return player obj to .map() for array destructuring assignment
       });
       //add extra ships for board 2 for now...
-      player2.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
-      player2.getGameboard().placeShip([2, 0], 'right', 'Submarine');
-      player2.getGameboard().placeShip([3, 0], 'right', 'Battleship');
-      player2.getGameboard().placeShip([4, 0], 'right', 'Carrier');
+      // player2.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
+      // player2.getGameboard().placeShip([2, 0], 'right', 'Submarine');
+      // player2.getGameboard().placeShip([3, 0], 'right', 'Battleship');
+      // player2.getGameboard().placeShip([4, 0], 'right', 'Carrier');
     };
 
     //fn to setup players, show/hids boards/buttons, attach listeners
@@ -156,7 +177,7 @@ const initProject = ()=> {
     switch (e.target.id) {
       //when 2P (battle other player) game type chosen
       case 'playOtherPlayerBtn':
-        gameType = '2P'; //needed?...
+        gameType = '2P';
         //make and assign players, populate their boards
         player1 = makePlayer();//makes player obj with default 'human' type
         player2 = makePlayer();
@@ -167,8 +188,8 @@ const initProject = ()=> {
         break;
       //when 1P (battle computer) game type chosen
       case 'playComputerBtn':
-        gameType = '1P'; //needed?...
-        //make one human, one computer player...
+        gameType = '1P'; //gameType for computer choice logic
+        //make one human, one computer player
         player1 = makePlayer(); //type 'human' is default
         player2 = makePlayer('computer');
         defaultBoardsPopulation();//for dev...

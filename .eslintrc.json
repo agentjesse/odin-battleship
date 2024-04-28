@@ -35,6 +35,7 @@
         "default-case":"off",
         "no-underscore-dangle":"off",
         "computed-property-spacing":"off",
-        "prefer-destructuring":"warn"
+        "prefer-destructuring":"warn",
+        "no-use-before-define":"warn"
     }
 }
