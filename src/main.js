@@ -1,7 +1,5 @@
 /* Next task:
 
--handle attacks on played cells
-
 */
 
 // JS imports
@@ -164,6 +162,20 @@ export const makeGameboard = ()=> {
   };
 };
 
+//object composition fn. returns an object with computer methods for spreading
+const isComputer = ()=> {
+  //methods of computer players
+  //fn to get computer's next attack
+  //use queue for next moves if hit was made? receiveAttack fn returns a 'hit' string...
+  const getNextAttackCoords = ()=> {
+
+  };
+
+  return {
+    getNextAttackCoords
+  };
+};
+
 //fn to make player objects. player types (strings) are 'human' or 'computer' and have
 //their own gameboard
 export const makePlayer = (type = 'human')=> {
@@ -171,6 +183,7 @@ export const makePlayer = (type = 'human')=> {
 
   return {
     getGameboard: ()=> gameboard,
-    getType: ()=> type
+    getType: ()=> type,
+    ...type === 'computer' ? isComputer() : {} //conditional composition
   };
 };

@@ -79,11 +79,12 @@ test('more gameboard obj tests', ()=> {
 });
 
 test('player obj creation', ()=> {
-  //make two human players
+  //make two players
   const player1 = makePlayer();
-  const player2 = makePlayer();
+  const computerPlayer = makePlayer('computer');
   //check board / playGrid array made with nulls to start
+  expect( player1.getType() ).toBe('human');
   expect( player1.getGameboard().getPlayGrid()[0][0] ).toBeNull();
-  expect( player1.getGameboard().getPlayGrid()[9][9] ).toBeNull();
-
+  expect( computerPlayer.getType() ).toBe('computer');
+  // expect( computerPlayer.test ).toBe('test');
 });
