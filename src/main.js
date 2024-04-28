@@ -162,13 +162,23 @@ export const makeGameboard = ()=> {
   };
 };
 
-//object composition fn. returns an object with computer methods for spreading
-const isComputer = ()=> {
-  //methods of computer players
-  //fn to get computer's next attack
-  //use queue for next moves if hit was made? receiveAttack fn returns a 'hit' string...
-  const getNextAttackCoords = ()=> {
+//object composition fn. pass in computer player's gameboard as state, return an
+//object with computer methods for spreading
+const isComputer = (gameboard)=> {
+  //make array of [0,0] to [9,9] arrays representing attack coordinates. playGrid 2D array
+  //used for structure.
+  const coordsToTry = [];
+  gameboard.getPlayGrid().forEach( (rowArr, row)=> {
+    rowArr.forEach( (data, col)=> coordsToTry.push( [row, col] ) );
+  } );
 
+  //fn to get computer's next attack
+  //implement queue for next moves if hit was made? note receiveAttack fn returns a 'hit' string...
+  const getNextAttackCoords = ()=> {
+    //Access a coordinate array with a random index within the array size
+    //need to remove coordinate from array instead of just returning like below...
+    let attackCoords = coordsToTry[ Math.floor( Math.random() * coordsToTry.length ) ];
+    return attackCoords;
   };
 
   return {
@@ -184,6 +194,6 @@ export const makePlayer = (type = 'human')=> {
   return {
     getGameboard: ()=> gameboard,
     getType: ()=> type,
-    ...type === 'computer' ? isComputer() : {} //conditional composition
+    ...type === 'computer' ? isComputer(gameboard) : {} //conditional composition
   };
 };

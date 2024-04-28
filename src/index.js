@@ -71,17 +71,17 @@ const initProject = ()=> {
   };
 
   //listener cb fn to handle sending an attack to opponent board
+  //need to handle what to do after attacks when player2 is computer, check gameType?...
   const sendAttack = (e)=> {
     e.stopPropagation();
-    //using conditional since border clicks trigger listener cb
+    //using conditional since div border clicks trigger listener cb
     if (e.target.className === 'cellDiv') {
       //call receiveAttack fn on opponent's gameboard, save result for display logic
       const opponentBoard = opponent.getGameboard();
       const attackRes = opponentBoard.receiveAttack([e.target.dataset.row, e.target.dataset.col]);
-      // lg(attackRes) //debug
-      //only re-render when attackRes holds a useful string like hit or miss
+      //only re-render when attackRes is a useful string like hit or miss
       if (attackRes) {
-        renderBoards();//show result to current player
+        renderBoards();//show attack result to current player
         //handle game over when all opponent's ships sunk
         if (opponentBoard.allShipsSunk()) {
           //disable attackingBoardDiv, inform player
@@ -93,13 +93,19 @@ const initProject = ()=> {
         } else {
           msgDiv.textContent = attackRes === 'hit' ? 'Attack hit!' : 'Attack missed!';
           setTimeout(() => {
+            //here seems like good place to get computer player's attack and handle it...
+            if (gameType === '1P') {
+              lg( opponent.getNextAttackCoords() );
+              
+            }
+
             boardsAndLabelsDiv.style.display = 'none';
             passDeviceDiv.style.display = 'block';
           }, 500); //change this little wait to 1.5s for prod...
         }
       }
-
     }
+
   };
 
   //fn to move to next player when continueBtn clicked

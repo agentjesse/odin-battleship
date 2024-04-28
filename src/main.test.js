@@ -85,6 +85,8 @@ test('player obj creation', ()=> {
   //check board / playGrid array made with nulls to start
   expect( player1.getType() ).toBe('human');
   expect( player1.getGameboard().getPlayGrid()[0][0] ).toBeNull();
+  //check computer players can be made and provide attack coordinates
   expect( computerPlayer.getType() ).toBe('computer');
-  // expect( computerPlayer.test ).toBe('test');
+  expect( computerPlayer.getNextAttackCoords().length ).toBe(2);
+
 });
