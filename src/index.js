@@ -1,8 +1,6 @@
 /* Next task:
 -Create UI after logic in main.js
 
--bug fix: only allow single player attacks after computer attack completes...
-
 -turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
 */
 
@@ -34,6 +32,7 @@ const initProject = ()=> {
   let player2;
   let currentPlayer; //turn reference vars
   let opponent;
+  let computerAttacking = false; //boolean to hold off premature attacks against computer
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
@@ -85,11 +84,16 @@ const initProject = ()=> {
       attackingBoardDiv.removeEventListener('click', sendAttack);
       msgDiv.textContent = 'Computer wins!';
     }
+    computerAttacking = false; //disable to allow player's next attack
   };
 
-  //listener cb fn to handle sending an attack to opponent board and handle
-  //computer retaliation attacks...
+  //listener cb fn to handle sending an attack to opponent board and handle the immediate
+  //computer retaliation attacks
+  //need to block attacks before computer finishes...
   const sendAttack = (e)=> {
+    if (computerAttacking) return; //return early
+    //set computerAttacking to true ASAP
+    if (gameType === '1P') computerAttacking = true;
     e.stopPropagation();
     //using conditional since div border clicks trigger listener cb
     if (e.target.className === 'cellDiv') {
@@ -104,6 +108,7 @@ const initProject = ()=> {
           //disable attackingBoardDiv, inform player
           attackingBoardDiv.removeEventListener('click', sendAttack);
           msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' } wins!`;
+          computerAttacking = false; //disable to allow player's next attack
         //handle next player's turn: show attack result message, wait a little to hide
         //boards and show passDeviceDiv. After that, we wait for the device pass, and for
         //next player to press the continue button with the continueToNextPlayer cb fn.
@@ -120,10 +125,21 @@ const initProject = ()=> {
             }
           }, 500); //change this little wait to 1.5s for prod...
         }
+      //handle click on cellDiv that did not result in hit / miss (previously attacked cell)
+      } else {
+        computerAttacking = false; //disable to allow player's next attack
       }
+    //handle click not on a cellDiv, like border
+    } else {
+      computerAttacking = false; //disable to allow player's next attack
     }
 
   };
+  /*sendAttack path debug checks:
+    checking hit path:o  go:o
+    miss:o    go:o
+    faulty off cell:o
+    faulty in cell:o */
 
   //fn to move to next player when continueBtn clicked
   const continueToNextPlayer = (e)=> {

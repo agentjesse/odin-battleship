@@ -36,7 +36,7 @@ button { display: block; cursor: pointer; }
   --battleshipColor:hsl(181, 100%, 17%);
   --carrierColor:   hsl(181, 100%, 13%);
   --hitColor: hsl(0, 100%, 44%);
-  --missColor: hsl(38, 100%, 78%);
+  --missColor: hsl(38, 100%, 71%);
 }
 
 /* main CSS */
