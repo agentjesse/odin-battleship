@@ -1,7 +1,7 @@
 /* Next task:
 -Create UI after logic in main.js
 
--add restart logic for computer battles
+-bug fix: only allow single player attacks after computer attack completes...
 
 -turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
 */
@@ -169,8 +169,10 @@ const initProject = ()=> {
         .forEach((c) => c.setAttribute('disabled', ''));
       restartBtn.removeAttribute('disabled');
       msgDiv.textContent = 'Player 1\'s attack turn..';
-      //set listeners to handle clicks on attack cells and continue btn
+      //set listener to handle attack cell clicks; re-adds it if removed by a game over
+      //browser tracks named fns added, avoids duplicate attachments.
       attackingBoardDiv.addEventListener('click', sendAttack);
+      //listener for 2 player game continue button
       continueBtn.addEventListener('click', continueToNextPlayer );
     };
 
@@ -178,8 +180,8 @@ const initProject = ()=> {
       //when 2P (battle other player) game type chosen
       case 'playOtherPlayerBtn':
         gameType = '2P';
-        //make and assign players, populate their boards
-        player1 = makePlayer();//makes player obj with default 'human' type
+        //make and assign 2 players (default type human), populate their boards
+        player1 = makePlayer();
         player2 = makePlayer();
         defaultBoardsPopulation();//for dev...
         //inform starting player, enable startBtn
@@ -205,16 +207,21 @@ const initProject = ()=> {
         //restore boards if reset button pressed when passDeviceDiv active
         boardsAndLabelsDiv.style.display = 'flex';
         passDeviceDiv.style.display = 'none';
-        //reset boards by reassigning player1/2 to new player objects with null playGrid arrays
-        player1 = makePlayer();//player obj with default 'human' type
-        player2 = makePlayer();
-        defaultBoardsPopulation();//for dev...
-        [currentPlayer, opponent] = [player1, player2]; //player1 starts again
-        msgDiv.textContent = 'Game restarted. Player 1\'s attack turn..';
-        //re-add the attackingBoardDiv listener and it's cb removed by a game over.
-        //browser tracks named fns added, avoids duplicate attachments.
-        attackingBoardDiv.addEventListener('click', sendAttack);
-        renderBoards();
+        //path for restarting computer battle...
+        if (gameType === '1P') {
+          //reset boards
+          player1 = makePlayer();//player obj with default 'human' type
+          player2 = makePlayer('computer');
+          defaultBoardsPopulation();//for dev...
+          setupPlayersAndListeners();
+        //path for restarting 2 player battle
+        } else {
+          //reset boards by reassigning player1/2 to new player objects with null playGrid arrays
+          player1 = makePlayer();//player obj with default 'human' type
+          player2 = makePlayer();
+          defaultBoardsPopulation();//for dev...
+          setupPlayersAndListeners();
+        }
         break;
     }
 

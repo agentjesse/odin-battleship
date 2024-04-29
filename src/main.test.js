@@ -89,5 +89,5 @@ test('player obj creation', ()=> {
   expect( computerPlayer.getType() ).toBe('computer');
   //make sure array with length 2, for each coordinate, is returned
   expect( computerPlayer.getNextAttackCoords().length ).toBe(2);
-  
+
 });
