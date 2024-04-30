@@ -177,6 +177,7 @@ const isComputer = (gameboard)=> {
   const atksQueue = makeQueue();
 
   //fn to return valid adjacent attack coords (arrays) from current attack coords
+  //this logic doesn't keep trying obvious lines...
   const getAdjacentCoordsArr = (currentAtkCoords, playerPlayGrid)=> {
     const nextAtkCoordsArr = [];
     const [startRow, startCol] = currentAtkCoords;//extract for clarity
@@ -210,7 +211,6 @@ const isComputer = (gameboard)=> {
   };
 
   //fn to get computer's next attack
-  //implement queue for next moves if hit was made? note receiveAttack fn returns a 'hit' string...
   //needs access to opponent gameboard arr to verify hits
   const getNextAttackCoords = (playerPlayGrid)=> {
     // lg(`queued attacks left: ${ atksQueue.getSize() }`); //debug
