@@ -87,7 +87,9 @@ test('player obj creation', ()=> {
   expect( player1.getGameboard().getPlayGrid()[0][0] ).toBeNull();
   //check computer players can be made and provide attack coordinates
   expect( computerPlayer.getType() ).toBe('computer');
-  //make sure array with length 2, for each coordinate, is returned
-  expect( computerPlayer.getNextAttackCoords().length ).toBe(2);
+  //make sure coords array of length 2 is returned
+  expect( computerPlayer.getNextAttackCoords(
+    player1.getGameboard().getPlayGrid()
+  ).length ).toBe(2);
 
 });

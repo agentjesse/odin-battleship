@@ -6,6 +6,7 @@
 //include file extension For Node.js when importing local modules:
 import { logToConsole as lg, tableToConsole as tb, objectToString as ots } from './logger.js';
 import makeLinkedList from './linkedList.js';
+import makeQueue from './queue.js';
 
 //jest testing for this file is in main.test.js and done with ES Module exports
 
@@ -166,23 +167,76 @@ export const makeGameboard = ()=> {
 //object composition fn. pass in computer player's gameboard as state, return an
 //object with computer methods for spreading
 const isComputer = (gameboard)=> {
-  //make linked list with node values of [0,0] to [9,9] arrays representing attack
+  //make linked list with nodes of '0,0' to '9,9' string values representing attack
   //coordinates. Use gameboard's playGrid 2D array for structure.
   const coordsToTry = makeLinkedList();
   gameboard.getPlayGrid().forEach( (rowArr, row)=> {
-    rowArr.forEach( (data, col)=> coordsToTry.append( [row, col] ) );
+    rowArr.forEach( (data, col)=> coordsToTry.append( `${row},${col}` ) );
   } );
-  // lg(coordsToTry.getSize()); //debug
-  // lg(coordsToTry.toString()); //debug
-  
+  //make a queue to enqueue computer's next attacks (coord arrays) if last one hit.
+  const atksQueue = makeQueue();
+
+  //fn to return valid adjacent attack coords (arrays) from current attack coords
+  const getAdjacentCoordsArr = (currentAtkCoords, playerPlayGrid)=> {
+    const nextAtkCoordsArr = [];
+    const [startRow, startCol] = currentAtkCoords;//extract for clarity
+    //need to loop over 2 arrays of 4 row/col move offsets, ordered cw from top
+    const rowOffsets = [-1, 0, 1, 0];
+    const colOffsets = [0, 1, 0, -1];
+    //4 operation loop to find up to 4 valid adjacent cells to attack
+    for ( let i = 0; i < 4; i++ ) {
+      const endRow = startRow + rowOffsets[i];
+      const endCol = startCol + colOffsets[i];
+      //only check in bounds cells
+      if (endRow < 10 && endRow > -1 && endCol < 10 && endCol > -1) {
+        //save coords that point to null or any ship name in playerPlayGrid array
+        // lg(currentAtkCoords);//debug
+        // lg( `exploring playerPlayGrid val at: ${endRow},${endCol}` );//debug
+        // lg(playerPlayGrid[endRow][endCol]); //debug
+        switch ( playerPlayGrid[endRow][endCol] ) {
+          case null:
+          case 'Patrol Boat':
+          case 'Destroyer':
+          case 'Submarine':
+          case 'Battleship':
+          case 'Carrier':
+            nextAtkCoordsArr.push( [endRow, endCol] );
+            //remove adjacent coord from coordsToTry linked list
+            coordsToTry.removeAt( coordsToTry.findIndex(`${endRow},${endCol}`) );
+        }
+      }
+    }
+    return nextAtkCoordsArr;
+  };
+
   //fn to get computer's next attack
   //implement queue for next moves if hit was made? note receiveAttack fn returns a 'hit' string...
-  const getNextAttackCoords = ()=> {
-    //get an attack coordinate using a random index within the linked list size. Use linked list
-    //removeAt fn to return the coordinate array node value and remove it from being tried again.
-    const attackCoords = coordsToTry.removeAt( Math.floor( Math.random() * coordsToTry.getSize() ) );
-    // lg(coordsToTry.getSize()); //debug
-    return attackCoords;
+  //needs access to opponent gameboard arr to verify hits
+  const getNextAttackCoords = (playerPlayGrid)=> {
+    // lg(`queued attacks left: ${ atksQueue.getSize() }`); //debug
+    //check for attack coords to deque and return early
+    if ( atksQueue.getSize() > 0 ) return atksQueue.dequeue();
+    //get attack coordinate array with a random index within the linked list size. Use linked
+    //list removeAt() to get the coordinate value and prevent re-attacking the cell.
+    const atkCoords = coordsToTry.removeAt( Math.floor( Math.random() * coordsToTry.getSize() ) )
+      .split(',').map(Number);
+    //do something according to data in cell
+    switch ( playerPlayGrid[atkCoords[0]][atkCoords[1]] ) {
+      //return coords for missed attack coords
+      case null:
+        return atkCoords;
+      //enqueue adjacent attack coords before returning attack coords that hit
+      case 'Patrol Boat':
+      case 'Destroyer':
+      case 'Submarine':
+      case 'Battleship':
+      case 'Carrier':
+        //enqueue attack coordinate arrays to try next
+        //this logic doesn't keep trying obvious lines...
+        getAdjacentCoordsArr(atkCoords, playerPlayGrid)
+          .forEach( (coord)=> atksQueue.enqueue(coord) );
+        return atkCoords; //return to UI logic after enqueueing adjacents
+    }
   };
 
   return {

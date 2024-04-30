@@ -71,8 +71,9 @@ const initProject = ()=> {
 
   //fn to get and handle computer's attacks. called by setTimeout after attacking computer
   const getAndHandleComputerAttack = ()=> {
+    //get computer's attack coordinates, need to pass in player's board for computer decision
     const compAtkRes = currentPlayer.getGameboard().receiveAttack(
-      opponent.getNextAttackCoords() //get computer's attack coordinates
+      opponent.getNextAttackCoords( currentPlayer.getGameboard().getPlayGrid() )
     );
     renderBoards();//show computer's attack
     msgDiv.textContent = compAtkRes === 'hit'
@@ -158,14 +159,15 @@ const initProject = ()=> {
 
     //fn for default population of both player boards, for dev
     //base a new fn off this one for random all ship placement in prod...
+    //refactor this out, being made on every listener call?...
     const defaultBoardsPopulation = ()=> {
       [player1, player2].forEach( (player) => {
         //populate player's board with default ships for now...
         player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
         // player.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
-        // player.getGameboard().placeShip([2, 0], 'right', 'Submarine');
-        // player.getGameboard().placeShip([8, 0], 'right', 'Battleship');
-        // player.getGameboard().placeShip([9, 0], 'right', 'Carrier');
+        player.getGameboard().placeShip([2, 0], 'right', 'Submarine');
+        player.getGameboard().placeShip([4, 0], 'right', 'Battleship');
+        player.getGameboard().placeShip([6, 0], 'right', 'Carrier');
         return player; //return player obj to .map() for array destructuring assignment
       });
       //add extra ships for board 2 for now...
