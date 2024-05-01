@@ -163,11 +163,12 @@ const initProject = ()=> {
     const defaultBoardsPopulation = ()=> {
       [player1, player2].forEach( (player) => {
         //populate player's board with default ships for now...
-        player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+        player.getGameboard().placeShip([0, 3], 'right', 'Patrol Boat');
         // player.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
-        player.getGameboard().placeShip([2, 0], 'right', 'Submarine');
-        player.getGameboard().placeShip([4, 0], 'right', 'Battleship');
-        player.getGameboard().placeShip([6, 0], 'right', 'Carrier');
+        player.getGameboard().placeShip([4, 1], 'right', 'Submarine');
+        player.getGameboard().placeShip([5, 2], 'right', 'Battleship');
+        player.getGameboard().placeShip([6, 3], 'right', 'Carrier');
+
         return player; //return player obj to .map() for array destructuring assignment
       });
       //add extra ships for board 2 for now...

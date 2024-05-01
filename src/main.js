@@ -164,78 +164,186 @@ export const makeGameboard = ()=> {
   };
 };
 
-//object composition fn. pass in computer player's gameboard as state, return an
-//object with computer methods for spreading
+//object composition fn. pass in computer's gameboard as state for structure, return
+//an object with computer methods for spreading into player object. computer methods
+//(like getNextURDLCellCoords) will use the passed in opponent's board.
 const isComputer = (gameboard)=> {
   //make linked list with nodes of '0,0' to '9,9' string values representing attack
-  //coordinates. Use gameboard's playGrid 2D array for structure.
+  //coordinates. A playGrid 2D array is used for structure.
   const coordsToTry = makeLinkedList();
   gameboard.getPlayGrid().forEach( (rowArr, row)=> {
     rowArr.forEach( (data, col)=> coordsToTry.append( `${row},${col}` ) );
   } );
-  //make a queue to enqueue computer's next attacks (coord arrays) if last one hit.
-  const atksQueue = makeQueue();
+  //vars to compare last 2 coordinates and calculate inline attacks
+  let lastHitCoords;
+  let secondLastHitCoords;
+  let hitOrigin;
 
-  //fn to return valid adjacent attack coords (arrays) from current attack coords
-  //this logic doesn't keep trying obvious lines...
-  const getAdjacentCoordsArr = (currentAtkCoords, playerPlayGrid)=> {
-    const nextAtkCoordsArr = [];
-    const [startRow, startCol] = currentAtkCoords;//extract for clarity
+  //fn to get the next valid URDL (up,right,down,left) cell to attack and set current attack
+  //direction. Returns 2 elem array of: row/col coordinates and attack's hit/miss
+  const getNextURDLCellCoords = (playerPlayGrid)=> {
+    const [lastHitRow, lastHitCol] = lastHitCoords;
     //need to loop over 2 arrays of 4 row/col move offsets, ordered cw from top
     const rowOffsets = [-1, 0, 1, 0];
     const colOffsets = [0, 1, 0, -1];
-    //4 operation loop to find up to 4 valid adjacent cells to attack
+    //4 operation loop to find next adjacent cell to attack
     for ( let i = 0; i < 4; i++ ) {
-      const endRow = startRow + rowOffsets[i];
-      const endCol = startCol + colOffsets[i];
-      //only check in bounds cells
-      if (endRow < 10 && endRow > -1 && endCol < 10 && endCol > -1) {
-        //save coords that point to null or any ship name in playerPlayGrid array
-        // lg(currentAtkCoords);//debug
-        // lg( `exploring playerPlayGrid val at: ${endRow},${endCol}` );//debug
-        // lg(playerPlayGrid[endRow][endCol]); //debug
-        switch ( playerPlayGrid[endRow][endCol] ) {
+      const newRow = lastHitRow + rowOffsets[i];
+      const newCol = lastHitCol + colOffsets[i];
+      //filter to in bounds cells
+      if (newRow < 10 && newRow > -1 && newCol < 10 && newCol > -1) {
+        //filter to cells with null or a ship name
+        switch ( playerPlayGrid[newRow][newCol] ) {
           case null:
+            //remove coord from coordsToTry linked list
+            coordsToTry.removeAt( coordsToTry.findIndex(`${newRow},${newCol}`) );
+            return [[newRow, newCol], 'miss'];
           case 'Patrol Boat':
           case 'Destroyer':
           case 'Submarine':
           case 'Battleship':
           case 'Carrier':
-            nextAtkCoordsArr.push( [endRow, endCol] );
-            //remove adjacent coord from coordsToTry linked list
-            coordsToTry.removeAt( coordsToTry.findIndex(`${endRow},${endCol}`) );
+            //remove coord from coordsToTry linked list
+            coordsToTry.removeAt( coordsToTry.findIndex(`${newRow},${newCol}`) );
+            return [[newRow, newCol], 'hit'];
         }
       }
     }
-    return nextAtkCoordsArr;
   };
 
-  //fn to get computer's next attack
-  //needs access to opponent gameboard arr to verify hits
+  //fn to get computer's next attack. Accesses opponent gameboard arr for cell data
+  //works ok with spaced apart ships, but if board is too crowded, forgets how to reverse...
   const getNextAttackCoords = (playerPlayGrid)=> {
-    // lg(`queued attacks left: ${ atksQueue.getSize() }`); //debug
-    //check for attack coords to deque and return early
-    if ( atksQueue.getSize() > 0 ) return atksQueue.dequeue();
-    //get attack coordinate array with a random index within the linked list size. Use linked
-    //list removeAt() to get the coordinate value and prevent re-attacking the cell.
+    //if secondLastHitCoords holds a value from two previous URDL (up,right,down,left)
+    //adjacent hits, begin linear attacks
+    if (secondLastHitCoords) {
+      const [lastRow, lastCol] = lastHitCoords;
+      const [secLastRow, secLastCol] = secondLastHitCoords;
+      //when last hits are horizontally aligned
+      if ( lastRow === secLastRow ) {
+        //check to attack left when cell is a ship's name or null
+        if ( lastCol > 0 && playerPlayGrid[lastRow][lastCol - 1] !== 'hit'
+          && playerPlayGrid[lastRow][lastCol - 1] !== 'miss' ) {
+          //update vars if leftwards inline attack will hit a ship
+          if ( playerPlayGrid[lastRow][lastCol - 1] !== null ) {
+            secondLastHitCoords = lastHitCoords;
+            lastHitCoords = [lastRow, lastCol - 1];
+          }
+          //switch last hit vars to attack rightwards on next turn since this attack misses
+          if ( playerPlayGrid[lastRow][lastCol - 1] === null ) {
+            //set lastHitCoords to hitOrigin coords, allowing to start from them next turn
+            lastHitCoords = hitOrigin;
+            //assign secondLastHitCoords to a same alignment hit adjacent to hitOrigin coords
+            secondLastHitCoords = [hitOrigin[0], hitOrigin[1] - 1];
+          }
+          //return this turn's leftward attack
+          coordsToTry.removeAt( coordsToTry.findIndex(`${lastRow},${lastCol - 1}`) );
+          return [lastRow, lastCol - 1];
+        }
+        //check to attack right when cell is a ship's name or null
+        if ( lastCol < 9 && playerPlayGrid[lastRow][lastCol + 1] !== 'hit'
+          && playerPlayGrid[lastRow][lastCol + 1] !== 'miss' ) {
+          //update vars if rightwards inline attack will hit a ship
+          if ( playerPlayGrid[lastRow][lastCol + 1] !== null ) {
+            secondLastHitCoords = lastHitCoords;
+            lastHitCoords = [lastRow, lastCol + 1];
+          }
+          //switch last hit vars to attack lefttwards on next turn since this attack misses
+          if ( playerPlayGrid[lastRow][lastCol + 1] === null ) {
+            //set lastHitCoords to hitOrigin coords, allowing to start from them next turn
+            lastHitCoords = hitOrigin;
+            //assign secondLastHitCoords to a same alignment hit adjacent to hitOrigin coords
+            secondLastHitCoords = [hitOrigin[0], hitOrigin[1] + 1];
+          }
+          //return this turn's rightward attack
+          coordsToTry.removeAt( coordsToTry.findIndex(`${lastRow},${lastCol + 1}`) );
+          return [lastRow, lastCol + 1];
+        }
+      //when last hits are vertically aligned
+      } else if (lastCol === secLastCol) {
+        //check to attack up when cell is a ship's name or null
+        if ( lastRow > 0 && playerPlayGrid[lastRow - 1][lastCol] !== 'hit'
+          && playerPlayGrid[lastRow - 1][lastCol] !== 'miss' ) {
+          //update vars if upwards inline attack will hit a ship
+          if ( playerPlayGrid[lastRow - 1][lastCol] !== null ) {
+            secondLastHitCoords = lastHitCoords;
+            lastHitCoords = [lastRow - 1, lastCol];
+          }
+          //switch last hit vars to attack downwards on next turn since this attack misses
+          if ( playerPlayGrid[lastRow - 1][lastCol] === null ) {
+            //set lastHitCoords to hitOrigin coords, allowing to start from them next turn
+            lastHitCoords = hitOrigin;
+            //assign secondLastHitCoords to a same alignment hit adjacent to hitOrigin coords
+            secondLastHitCoords = [hitOrigin[0] - 1, hitOrigin[1]];
+          }
+          //return this turn's upward attack
+          coordsToTry.removeAt( coordsToTry.findIndex(`${lastRow - 1},${lastCol}`) );
+          return [lastRow - 1, lastCol];
+        }
+        //check to attack down when cell is a ship's name or null
+        if ( lastRow < 9 && playerPlayGrid[lastRow + 1][lastCol] !== 'hit'
+          && playerPlayGrid[lastRow + 1][lastCol] !== 'miss' ) {
+          //update vars if downwards inline attack will hit a ship
+          if ( playerPlayGrid[lastRow + 1][lastCol] !== null ) {
+            secondLastHitCoords = lastHitCoords;
+            lastHitCoords = [lastRow + 1, lastCol];
+          }
+          //switch last hit vars to attack upwards on next turn since this attack misses
+          if ( playerPlayGrid[lastRow + 1][lastCol] === null ) {
+            //set lastHitCoords to hitOrigin coords, allowing to start from them next turn
+            lastHitCoords = hitOrigin;
+            //assign secondLastHitCoords to a same alignment hit adjacent to hitOrigin coords
+            secondLastHitCoords = [hitOrigin[0] + 1, hitOrigin[1]];
+          }
+          //return this turn's downward attack
+          coordsToTry.removeAt( coordsToTry.findIndex(`${lastRow + 1},${lastCol}`) );
+          return [lastRow + 1, lastCol];
+        }
+      }
+      //this point is reached when an attack could not be made at any end, for example
+      //when ship is at edge or between missed shots. set up next attack as random by
+      //clearing last two hit references.
+      [lastHitCoords, secondLastHitCoords] = [null, null];
+    }
+
+    //if lastHitCoords holds a value from a previous turn that hit, need to attack
+    //an URDL sibling cell to find an adjacent hit and set current attack direction.
+    if (lastHitCoords) {
+      const [nextAtkCoords, hitOrMiss] = getNextURDLCellCoords(playerPlayGrid);
+      //if the new adjacent cell attack will hit, linear attacks will start on next turn.
+      //Save coords in the appropriate vars for now and return them to UI logic
+      if ( hitOrMiss === 'hit' ) {
+        secondLastHitCoords = lastHitCoords; //check for this on next turn
+        lastHitCoords = nextAtkCoords;
+        return nextAtkCoords;
+      }
+      //if the adjacent attack misses, just return it.
+      if ( hitOrMiss === 'miss' ) {
+        return nextAtkCoords;
+      }
+    }
+
+    //get random attack coordinate array with a random index within the linked list size. Use
+    //linked list removeAt() to get the coordinate value and prevent re-attacking the cell.
     const atkCoords = coordsToTry.removeAt( Math.floor( Math.random() * coordsToTry.getSize() ) )
       .split(',').map(Number);
     //do something according to data in cell
     switch ( playerPlayGrid[atkCoords[0]][atkCoords[1]] ) {
-      //return coords for missed attack coords
+      //for missed attack coords:
       case null:
         return atkCoords;
-      //enqueue adjacent attack coords before returning attack coords that hit
+      //for hit attack coords:
       case 'Patrol Boat':
       case 'Destroyer':
       case 'Submarine':
       case 'Battleship':
       case 'Carrier':
-        //enqueue attack coordinate arrays to try next
-        //this logic doesn't keep trying obvious lines...
-        getAdjacentCoordsArr(atkCoords, playerPlayGrid)
-          .forEach( (coord)=> atksQueue.enqueue(coord) );
-        return atkCoords; //return to UI logic after enqueueing adjacents
+        //if atkCoords will hit, save them to start checking URDL cells for an
+        //adjacent hit from next turn
+        lastHitCoords = atkCoords;
+        //set hitOrigin to atkCoords before returning to UI logic
+        hitOrigin = atkCoords;
+        return atkCoords;
     }
   };
 
