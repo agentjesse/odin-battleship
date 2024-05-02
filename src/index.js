@@ -1,5 +1,7 @@
 /* Next task:
--Create UI after logic in main.js
+-make random ship placement fn, button after.
+
+-cleanup logs
 
 -turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
 */
@@ -33,6 +35,7 @@ const initProject = ()=> {
   let currentPlayer; //turn reference vars
   let opponent;
   let computerAttacking = false; //boolean to hold off premature attacks against computer
+  let debounceTimerIdentifier; //store timeout identifier from the setTimeout in sendAttack
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
@@ -88,14 +91,15 @@ const initProject = ()=> {
     computerAttacking = false; //disable to allow player's next attack
   };
 
-  //listener cb fn to handle sending an attack to opponent board and handle the immediate
-  //computer retaliation attacks
-  //need to block attacks before computer finishes...
+  //listener cb fn to handle sending an attack to opponent board and get computer's attacks
   const sendAttack = (e)=> {
-    if (computerAttacking) return; //return early
-    //set computerAttacking to true ASAP
-    if (gameType === '1P') computerAttacking = true;
     e.stopPropagation();
+    //return early if debounceTimerIdentifier holds a timer identifier from setTimeout
+    if (debounceTimerIdentifier) return;
+    //return early if computer attack not done ...maybe not needed after debouncing?...
+    if (computerAttacking) return;
+    //set computerAttacking to true
+    if (gameType === '1P') computerAttacking = true;
     //using conditional since div border clicks trigger listener cb
     if (e.target.className === 'cellDiv') {
       //call receiveAttack fn on opponent's gameboard, save result for display logic
@@ -115,16 +119,17 @@ const initProject = ()=> {
         //next player to press the continue button with the continueToNextPlayer cb fn.
         } else {
           msgDiv.textContent = attackRes === 'hit' ? 'Attack hit!' : 'Attack missed!';
-          setTimeout( () => {
-            //when battling computer, receive and show it's attacks
-            if (gameType === '1P') {
-              getAndHandleComputerAttack();
-            //when battling other player, hide/show appropriate elements
-            } else {
+          //show current player's attack / info message for a delayed period, then either hide
+          //boards and show passDeviceDiv, or proceed with computer's attack
+          debounceTimerIdentifier = setTimeout( () => {
+            if (gameType === '2P') {
               boardsAndLabelsDiv.style.display = 'none';
               passDeviceDiv.style.display = 'block';
+            } else { // gameType === '1P'
+              getAndHandleComputerAttack();
             }
-          }, 100); //change this little wait to 1500 for prod...
+            debounceTimerIdentifier = null; //clear it after either path
+          }, 150); //extend this delay to 1500 for prod...
         }
       //handle click on cellDiv that did not result in hit / miss (previously attacked cell)
       } else {
