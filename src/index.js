@@ -124,7 +124,7 @@ const initProject = ()=> {
               boardsAndLabelsDiv.style.display = 'none';
               passDeviceDiv.style.display = 'block';
             }
-          }, 500); //change this little wait to 1.5s for prod...
+          }, 100); //change this little wait to 1500 for prod...
         }
       //handle click on cellDiv that did not result in hit / miss (previously attacked cell)
       } else {
@@ -163,11 +163,11 @@ const initProject = ()=> {
     const defaultBoardsPopulation = ()=> {
       [player1, player2].forEach( (player) => {
         //populate player's board with default ships for now...
-        player.getGameboard().placeShip([0, 3], 'right', 'Patrol Boat');
-        // player.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
-        player.getGameboard().placeShip([4, 1], 'right', 'Submarine');
-        player.getGameboard().placeShip([5, 2], 'right', 'Battleship');
-        player.getGameboard().placeShip([6, 3], 'right', 'Carrier');
+        // player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+        player.getGameboard().placeShip([4, 5], 'up', 'Destroyer');
+        player.getGameboard().placeShip([5, 4], 'right', 'Submarine');
+        player.getGameboard().placeShip([7, 2], 'up', 'Battleship');
+        player.getGameboard().placeShip([8, 1], 'right', 'Carrier');
 
         return player; //return player obj to .map() for array destructuring assignment
       });

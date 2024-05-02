@@ -179,8 +179,8 @@ const isComputer = (gameboard)=> {
   let secondLastHitCoords;
   let hitOrigin;
 
-  //fn to get the next valid URDL (up,right,down,left) cell to attack and set current attack
-  //direction. Returns 2 elem array of: row/col coordinates and attack's hit/miss
+  //fn to get the next valid URDL (up,right,down,left) cell to attack if found.
+  //Returns 2 elem array of: row/col coordinates and attack's hit/miss
   const getNextURDLCellCoords = (playerPlayGrid)=> {
     const [lastHitRow, lastHitCol] = lastHitCoords;
     //need to loop over 2 arrays of 4 row/col move offsets, ordered cw from top
@@ -206,13 +206,17 @@ const isComputer = (gameboard)=> {
             //remove coord from coordsToTry linked list
             coordsToTry.removeAt( coordsToTry.findIndex(`${newRow},${newCol}`) );
             return [[newRow, newCol], 'hit'];
+          default:
+            // lg(`no null or ship name found at row: ${newRow} col: ${newCol}. for loop iteration index: ${i}`);
         }
       }
     }
+    //no valid URDL cell if no return from loop. return null so getNextAttackCoords picks a random cell
+    return [[null, null], null];
   };
 
   //fn to get computer's next attack. Accesses opponent gameboard arr for cell data
-  //works ok with spaced apart ships, but if board is too crowded, forgets how to reverse...
+  //works ok with spaced apart ships, but if ships touch, errors. if board is too crowded, forgets how to reverse...
   const getNextAttackCoords = (playerPlayGrid)=> {
     //if secondLastHitCoords holds a value from two previous URDL (up,right,down,left)
     //adjacent hits, begin linear attacks
@@ -306,21 +310,21 @@ const isComputer = (gameboard)=> {
       [lastHitCoords, secondLastHitCoords] = [null, null];
     }
 
-    //if lastHitCoords holds a value from a previous turn that hit, need to attack
-    //an URDL sibling cell to find an adjacent hit and set current attack direction.
+    //if lastHitCoords holds a value from a previous turn that hit, try attacking
+    //an URDL sibling cell to find an adjacent hit. this provides direction context.
     if (lastHitCoords) {
       const [nextAtkCoords, hitOrMiss] = getNextURDLCellCoords(playerPlayGrid);
-      //if the new adjacent cell attack will hit, linear attacks will start on next turn.
-      //Save coords in the appropriate vars for now and return them to UI logic
-      if ( hitOrMiss === 'hit' ) {
-        secondLastHitCoords = lastHitCoords; //check for this on next turn
-        lastHitCoords = nextAtkCoords;
-        return nextAtkCoords;
+      //return attacks that hit for linear attacking next turn. return missed attacks as is
+      switch (hitOrMiss) {
+        case 'hit':
+          // Save coordinates for linear attacks next turn
+          secondLastHitCoords = lastHitCoords;
+          lastHitCoords = nextAtkCoords;
+          return nextAtkCoords;
+        case 'miss':
+          return nextAtkCoords;
       }
-      //if the adjacent attack misses, just return it.
-      if ( hitOrMiss === 'miss' ) {
-        return nextAtkCoords;
-      }
+    //if no hit or miss, let fn continue to return a random cell
     }
 
     //get random attack coordinate array with a random index within the linked list size. Use
