@@ -1,5 +1,7 @@
 /* Next task:
--make random ship placement fn, button after.
+-add drag and drop ship placement (convert logCell fn)
+
+-optional: make random ship placement fn and btn
 
 -cleanup logs
 
@@ -183,6 +185,13 @@ const initProject = ()=> {
       // player2.getGameboard().placeShip([4, 0], 'right', 'Carrier');
     };
 
+    //fn to log .cellDiv elem hovered over
+    const logCell = (e)=> {
+      const cell = e.target.className === 'cellDiv' ? e.target : null;
+      if (cell) console.log(cell);
+
+    }
+
     //fn to setup players, show/hids boards/buttons, attach listeners
     const setupPlayersAndListeners = ()=> {
       //assign current player, opponent, and show their boards
@@ -193,6 +202,9 @@ const initProject = ()=> {
         .forEach((c) => c.setAttribute('disabled', ''));
       restartBtn.removeAttribute('disabled');
       msgDiv.textContent = 'Player 1\'s attack turn..';
+      //listener to log .cellDiv element to console...
+      attackingBoardDiv.addEventListener('mouseover', logCell);
+
       //set listener to handle attack cell clicks; re-adds it if removed by a game over
       //browser tracks named fns added, avoids duplicate attachments.
       attackingBoardDiv.addEventListener('click', sendAttack);
