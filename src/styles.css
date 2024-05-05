@@ -57,6 +57,7 @@ body{
   span {
     color: var(--bg800);
   }
+
 }
 
 #passDeviceDiv {
@@ -120,10 +121,15 @@ body{
       border: 1px solid var(--bg900);
       aspect-ratio: 1/1; /*match "auto" width or height to aspect ratio*/
     }
-    .cellDiv.active {
-      background-color: var(--white);
-    }
   }
+}
+
+.shipOverlayDiv {
+  background-color: var(--mg500);
+  opacity: 0.7;
+  display: block;
+  position: absolute;
+  pointer-events: none; /* pass through click events */
 }
 
 #msgDiv {
