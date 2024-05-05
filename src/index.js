@@ -1,7 +1,7 @@
 /* Next task:
--add drag and drop ship placement
+-add drag and drop ship placement. for pc board make and call simple generic ship placer for now.
 
--optional: make random ship placement fn and btn
+-optional: make good random ship placement fn and btn for pc / player use
 
 -cleanup logs
 
@@ -31,6 +31,7 @@ const initProject = ()=> {
   const restartBtn = document.querySelector('#restartBtn');
   const playOtherPlayerBtn = document.querySelector('#playOtherPlayerBtn');
   const playComputerBtn = document.querySelector('#playComputerBtn');
+  const clearableDiv = document.querySelector('.clearable'); //for ship direction button
   let gameType; //assign '1P'/'2P' when button clicked
   let player1; //player objects with gameboards
   let player2;
@@ -40,6 +41,7 @@ const initProject = ()=> {
   let debounceTimerIdentifier; //store timeout identifier from the setTimeout in sendAttack
   let lastHoveredCell; //store last cell hovered over; for ship placement?...
   let shipDirection = 'right'; //for ship placement, change with a button...
+  let shipDirectionBtn;
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
@@ -221,11 +223,20 @@ const initProject = ()=> {
     };
 
     //fn to click-to-place 5 ships and continue to game setup (simpler than drag and drop).
-    //the fn holds ship placement state that a listener inside will reference. Accesses
-    // state vars: shipDirection, lastHoveredCell, player1, player2...
+    //the listener cb closes over bound and free variables as state for ship placement logic
     const placeShipsAndSetup = ()=> {
-      const shipsToPlace = ['Patrol Boat', 'Destroyer', 'Submarine', 'Battleship', 'Carrier'];
+      const shipNamesToPlace = ['Patrol Boat', 'Destroyer', 'Submarine', 'Battleship', 'Carrier'];
       let shipIndex = 0;
+
+      //make and add ship direction changing button in cleared .clearable div
+      clearableDiv.textContent = '';
+      shipDirectionBtn = document.createElement('button');
+      shipDirectionBtn.textContent = 'change ship direction';
+      clearableDiv.append( shipDirectionBtn );
+      //todo: make listener for shipDirectionBtn...
+
+      //initial ship placement message
+      msgDiv.textContent = 'Click to place your Patrol Boat. Change ship direction below';
 
       //visual feedback:
       renderBoards();
@@ -234,35 +245,54 @@ const initProject = ()=> {
       //listener to remove active class from last hovered cell on mouse out
       receivingBoardDiv.addEventListener('mouseout', setLastHoveredCellInactive);
 
-      //cb fn to place 5 ships in current player's gameboard. uses gameboard.placeShip()...
+      //when ship placements done:
+      const cleanupShipPlacementListeners = ()=> {
+        receivingBoardDiv.removeEventListener('click', placeShipFromCell);
+        //remove the cell visualizing listeners after ship placement
+        receivingBoardDiv.removeEventListener('mouseover', setHoveredCellActive);
+        receivingBoardDiv.removeEventListener('mouseout', setLastHoveredCellInactive);
+      };
+
+      //board click cb to place 5 ships in current player's gameboard. uses gameboard.placeShip()...
       const placeShipFromCell = ()=> {
+        //handle when all 5 ships placed for current player...
+
         //when a ship must be placed and cursor on cell
-        if (shipIndex < shipsToPlace.length && lastHoveredCell) {
+        if (shipIndex < shipNamesToPlace.length && lastHoveredCell) {
           // lg(lastHoveredCell); //debug
           //try placing a ship; placeShip throws errors to catch
           try {
-            //place ships with 3 args: startCoords, shipDirection, ship name
+            //placeShip args: startCoords, shipDirection, ship name
             currentPlayer.getGameboard().placeShip(
               [+lastHoveredCell.dataset.row, +lastHoveredCell.dataset.col],
               shipDirection,
-              shipsToPlace[shipIndex]
+              shipNamesToPlace[shipIndex]
             );
             // lg( currentPlayer.getGameboard().getPlayGrid() );
             renderBoards(); //show the placed ship
-            shipIndex++;
+            shipIndex++; //increment index
+            //set msg for next placement
+            if (shipIndex < 5) {
+              msgDiv.textContent = `Place your ${shipNamesToPlace[shipIndex]}`;
+            //continue to setup when all ships placed
+            } else {
+              if (gameType === '1P') {
+                //cleanup listeners first
+                cleanupShipPlacementListeners();
+                setupButtonsAndListeners();
+              }
+              //for 2P games: ...
+              lg('test')
+            }
+            //log ship placement errors, user can try again
+          } catch (err) {
+            msgDiv.textContent = 'invalid ship placement, try again';
+            lg(err.message);
           }
-          //log ship placement errors, user can try again
-          catch (err) { lg(err.message); }
         }
       };
 
       receivingBoardDiv.addEventListener('click', placeShipFromCell);
-      //starting with code for 1P gameType...
-      msgDiv.textContent = 'Place your Patrol Boat. Change shipDirection with button below:';
-
-      //call to setup and begin game once ships placed...
-      // setupButtonsAndListeners();
-
     };
 
     switch (e.target.id) {
@@ -287,7 +317,7 @@ const initProject = ()=> {
         player2 = makePlayer('computer');
         [currentPlayer, opponent] = [player1, player2];
         // defaultBoardsPopulation();//for dev...
-        //place ships on board, setup game when done..
+        //start ship placement listener, setup game when done..
         placeShipsAndSetup();
         break;
       //setup game (board display,event listeners) when start btn clicked
