@@ -1,5 +1,5 @@
 /* Next task:
--add drag and drop ship placement (convert logCell fn)
+-add drag and drop ship placement
 
 -optional: make random ship placement fn and btn
 
@@ -38,6 +38,8 @@ const initProject = ()=> {
   let opponent;
   let computerAttacking = false; //boolean to hold off premature attacks against computer
   let debounceTimerIdentifier; //store timeout identifier from the setTimeout in sendAttack
+  let lastHoveredCell; //store last cell hovered over; for ship placement?...
+  let shipDirection = 'right'; //for ship placement, change with a button...
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
@@ -170,7 +172,7 @@ const initProject = ()=> {
     const defaultBoardsPopulation = ()=> {
       [player1, player2].forEach( (player) => {
         //populate player's board with default ships for now...
-        // player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
+        player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
         player.getGameboard().placeShip([4, 5], 'up', 'Destroyer');
         player.getGameboard().placeShip([5, 4], 'right', 'Submarine');
         player.getGameboard().placeShip([7, 2], 'up', 'Battleship');
@@ -185,31 +187,82 @@ const initProject = ()=> {
       // player2.getGameboard().placeShip([4, 0], 'right', 'Carrier');
     };
 
-    //fn to log .cellDiv elem hovered over
-    const logCell = (e)=> {
-      const cell = e.target.className === 'cellDiv' ? e.target : null;
-      if (cell) console.log(cell);
+    //fn to set .active on hovered cell and save it in state var lastHoveredCell
+    //for ship placement...
+    const setHoveredCellActive = (e)=> {
+      lastHoveredCell = e.target.classList.contains('cellDiv') ? e.target : null;
+      if (lastHoveredCell) { // .cellDivs only
+        lastHoveredCell.classList.add('active');
+      }
+    };
 
-    }
+    //fn to remove .active class from lastHoveredCell
+    const setLastHoveredCellInactive = ()=> {
+      if (lastHoveredCell) lastHoveredCell.classList.remove('active');
+    };
 
-    //fn to setup players, show/hids boards/buttons, attach listeners
-    const setupPlayersAndListeners = ()=> {
-      //assign current player, opponent, and show their boards
-      [currentPlayer, opponent] = [player1, player2];
-      renderBoards();
+    //fn to setup buttons, attach listeners
+    //need to make sure works for 2P...
+    const setupButtonsAndListeners = ()=> {
+      //remove listeners for ship placement at this stage if needed...
+
       //set btns
       [playOtherPlayerBtn, playComputerBtn, startBtn]
         .forEach((c) => c.setAttribute('disabled', ''));
       restartBtn.removeAttribute('disabled');
+
       msgDiv.textContent = 'Player 1\'s attack turn..';
-      //listener to log .cellDiv element to console...
-      attackingBoardDiv.addEventListener('mouseover', logCell);
 
       //set listener to handle attack cell clicks; re-adds it if removed by a game over
       //browser tracks named fns added, avoids duplicate attachments.
       attackingBoardDiv.addEventListener('click', sendAttack);
       //listener for 2 player game continue button
       continueBtn.addEventListener('click', continueToNextPlayer );
+    };
+
+    //fn to click-to-place 5 ships and continue to game setup (simpler than drag and drop).
+    //the fn holds ship placement state that a listener inside will reference. Accesses
+    // state vars: shipDirection, lastHoveredCell, player1, player2...
+    const placeShipsAndSetup = ()=> {
+      const shipsToPlace = ['Patrol Boat', 'Destroyer', 'Submarine', 'Battleship', 'Carrier'];
+      let shipIndex = 0;
+
+      //visual feedback:
+      renderBoards();
+      //listener to set active class on hovered .cellDiv element and save it
+      receivingBoardDiv.addEventListener('mouseover', setHoveredCellActive);
+      //listener to remove active class from last hovered cell on mouse out
+      receivingBoardDiv.addEventListener('mouseout', setLastHoveredCellInactive);
+
+      //cb fn to place 5 ships in current player's gameboard. uses gameboard.placeShip()...
+      const placeShipFromCell = ()=> {
+        //when a ship must be placed and cursor on cell
+        if (shipIndex < shipsToPlace.length && lastHoveredCell) {
+          // lg(lastHoveredCell); //debug
+          //try placing a ship; placeShip throws errors to catch
+          try {
+            //place ships with 3 args: startCoords, shipDirection, ship name
+            currentPlayer.getGameboard().placeShip(
+              [+lastHoveredCell.dataset.row, +lastHoveredCell.dataset.col],
+              shipDirection,
+              shipsToPlace[shipIndex]
+            );
+            // lg( currentPlayer.getGameboard().getPlayGrid() );
+            renderBoards(); //show the placed ship
+            shipIndex++;
+          }
+          //log ship placement errors, user can try again
+          catch (err) { lg(err.message); }
+        }
+      };
+
+      receivingBoardDiv.addEventListener('click', placeShipFromCell);
+      //starting with code for 1P gameType...
+      msgDiv.textContent = 'Place your Patrol Boat. Change shipDirection with button below:';
+
+      //call to setup and begin game once ships placed...
+      // setupButtonsAndListeners();
+
     };
 
     switch (e.target.id) {
@@ -219,23 +272,27 @@ const initProject = ()=> {
         //make and assign 2 players (default type human), populate their boards
         player1 = makePlayer();
         player2 = makePlayer();
+        [currentPlayer, opponent] = [player1, player2];
         defaultBoardsPopulation();//for dev...
-        //inform starting player, enable startBtn
-        msgDiv.textContent = 'Player 1 goes first! click start to begin';
+        //inform starting player, enable startBtn...
+        msgDiv.textContent = 'Player 1 goes first! click start to place ships..';
         startBtn.removeAttribute('disabled');
         break;
       //when 1P (battle computer) game type chosen
       case 'playComputerBtn':
+        // debugger
         gameType = '1P'; //gameType for computer choice logic
         //make one human, one computer player
         player1 = makePlayer(); //type 'human' is default
         player2 = makePlayer('computer');
-        defaultBoardsPopulation();//for dev...
-        setupPlayersAndListeners();
+        [currentPlayer, opponent] = [player1, player2];
+        // defaultBoardsPopulation();//for dev...
+        //place ships on board, setup game when done..
+        placeShipsAndSetup();
         break;
-      //start listening for clicks when start btn clicked
+      //setup game (board display,event listeners) when start btn clicked
       case 'startBtn':
-        setupPlayersAndListeners();
+        setupButtonsAndListeners();
         break;
       //handle boards/state reset, game restart
       case 'restartBtn':
@@ -249,14 +306,14 @@ const initProject = ()=> {
           player1 = makePlayer();//player obj with default 'human' type
           player2 = makePlayer('computer');
           defaultBoardsPopulation();//for dev...
-          setupPlayersAndListeners();
+          setupButtonsAndListeners();
         //path for restarting 2 player battle
         } else {
           //reset boards by reassigning player1/2 to new player objects with null playGrid arrays
           player1 = makePlayer();//player obj with default 'human' type
           player2 = makePlayer();
           defaultBoardsPopulation();//for dev...
-          setupPlayersAndListeners();
+          setupButtonsAndListeners();
         }
         break;
     }

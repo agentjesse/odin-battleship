@@ -47,6 +47,7 @@ export const makeShip = ( shipName )=> {
 
 //private makeGameboard fn to place a ship on board and return a ship obj. The board
 //marking part of placing a ship is done in this fn by editing the playGrid array.
+//errors thrown for invalid placement arguments
 const _placeAndGetShip = ( startCoords, direction, shipName, playGrid )=> {
   const ship = makeShip(shipName);
   const markEnd = ship.getLength();
@@ -110,6 +111,7 @@ export const makeGameboard = ()=> {
   const shipsMap = new Map();
 
   //this fn calls private _placeAndGetShip with playGrid reference and expects ship obj back
+  //errors on invalid placement arguments, can use try-catch blocks
   const placeShip = (startCoords, direction, shipName,)=> {
     //place ship by marking board in _placeAndGetShip, then set returned ship in shipsMap
     shipsMap.set( shipName, _placeAndGetShip(startCoords, direction, shipName, playGrid) );

@@ -120,6 +120,9 @@ body{
       border: 1px solid var(--bg900);
       aspect-ratio: 1/1; /*match "auto" width or height to aspect ratio*/
     }
+    .cellDiv.active {
+      background-color: var(--white);
+    }
   }
 }
 
