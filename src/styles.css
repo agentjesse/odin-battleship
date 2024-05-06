@@ -47,6 +47,8 @@ body{
   margin: 0 auto;
   background-color: var(--bg800);
   color: var(--white);
+  /*below hides long vertical ship overlay going past screen, but causes scroll issue*/
+  /* overflow-y: hidden; */
 
   h1 {
     text-align: center;

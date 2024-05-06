@@ -1,3 +1,7 @@
+/* Next task
+-optimize by keeping a reference to the second last node in addition to the tail, called penultimate. AND!!!! check every single other function will correctly set it after implementing the optimization
+*/
+
 import { logToConsole as lg } from './logger.js'; //shorthand loggers
 
 //node creation fn
@@ -48,11 +52,13 @@ const makeLinkedList = (head = null, tail = null)=> {
   //NEW MEMOIZATION CODE: fn to return amount of nodes in list.
   const getSize = ()=> currentSize;
 
-  //fn to get node from an index
-  const at = (index)=> {
+  //fn to get node from an index. optionally provide boolean for skipValidation for internal invocations
+  const at = (index, skipValidation)=> {
     let currentNode = head;
-    if ( index < 0 || index >= getSize() ) {
-      throw new Error('Index outside list bounds [list is zero-indexed]');
+    if (!skipValidation) {
+      if ( index < 0 || index >= getSize() ) {
+        throw new Error('Index outside list bounds [list is zero-indexed]');
+      }
     }
     for ( let currentIndex = 0; currentIndex <= index; currentIndex++ ) {
       if ( currentIndex === index) return currentNode;
@@ -84,7 +90,9 @@ const makeLinkedList = (head = null, tail = null)=> {
     currentSize--;
   };
 
-  //fn to check if a value is in the list
+  /*
+
+  //fn to check if a value is in the list, not needed, just check if findIndex returns an index
   const contains = (value)=> {
     //traverse and compare
     let currentNode = head;
@@ -95,7 +103,10 @@ const makeLinkedList = (head = null, tail = null)=> {
     return false;//when value not in list
   };
 
-  // given a value, get the index of the node if value exists in list
+  */
+
+  // given a value, get the index of the node if value exists in list. use instead of
+  //contains method above, since null returned when no node with value found in list
   const findIndex = (value)=> {
     //travese, compare, save index
     let index = 0;
@@ -124,7 +135,7 @@ const makeLinkedList = (head = null, tail = null)=> {
       return;
     }
     //handle insertion at index within list after head
-    const previousNode = at(insertIndex - 1);
+    const previousNode = at(insertIndex - 1, true);//skips validation in at()
     const nextNode = previousNode.next.next;
     //create new node with value and the nextNode
     previousNode.next = makeNode(value, nextNode);
@@ -150,7 +161,7 @@ const makeLinkedList = (head = null, tail = null)=> {
       return returnVal;
     }
     //handle removal at index within list after head
-    const previousNode = at(removalIndex - 1);
+    const previousNode = at(removalIndex - 1, true); //skips validation in at()
     returnVal = previousNode.next.value;
     const nextNode = previousNode.next.next;
     //connect nodes together
@@ -183,7 +194,7 @@ const makeLinkedList = (head = null, tail = null)=> {
     getSize,
     at,
     pop,
-    contains,
+    // contains, //use findIndex
     findIndex,
     toString,
     insertAt,
@@ -199,7 +210,6 @@ export default makeLinkedList;
 // lg( `nodes in linked list: ${ linkedList1.getSize() }` );
 // lg( `tail of linked list: ${ JSON.stringify( linkedList1.getTail(), null, '\t' ) }` );
 // lg( `node at index 1 of linked list: ${ JSON.stringify( linkedList1.at(1), null, '\t' ) }` );
-// lg( `'pear' in list?: ${ linkedList1.contains('pear') }` );
 // lg( `index of 'cherry' in list: ${ linkedList1.findIndex('cherry') }` );
 // linkedList1.insertAt('apple', 0);
 // lg( linkedList1.removeAt(0) );

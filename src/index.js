@@ -1,14 +1,13 @@
 /* Next task:
--add drag and drop ship placement. for pc board make and call simple generic ship placer for now.
 
--remove listener and disable ship direct btn in ship placement cleanup fn?
-
--optional: make good random ship placement fn and btn for pc / player use
+-make random ship placement btn for players to use...
 
 -cleanup logs
 
 -move initProject vars into the fns that need them
--refactor functions out of callbacks
+-find fns to refactor out of callbacks, if any
+
+-update linkedlist in its own repo and your other projects to match the one from this project where at() has been optimized. there is another optimization to do also, if there is time...
 
 -turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
 */
@@ -17,7 +16,7 @@
 import './styles.css';
 // import './assets/book-remove.svg'; //asset files example
 //include file extension For Node.js when importing local modules:
-import { logToConsole as lg, tableToConsole as tb, objectToString as ots } from './logger.js';
+import { logToConsole as lg, log2DStringArray as lg2sa } from './logger.js';
 import { makePlayer } from './main.js';
 
 //jest testing for this file is in index.test.js and done with ES Module exports
@@ -43,6 +42,7 @@ const initProject = ()=> {
   let opponent;
   let computerAttacking = false; //boolean to hold off premature attacks against computer
   let debounceTimerIdentifier; //store timeout identifier from the setTimeout in sendAttack
+  let player1ShipsPlaced = false; //to track player ship placement completion
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
@@ -79,25 +79,6 @@ const initProject = ()=> {
 
   };
 
-  //fn to get and handle computer's attacks. called by setTimeout after attacking computer
-  const getAndHandleComputerAttack = ()=> {
-    //get computer's attack coordinates, need to pass in player's board for computer decision
-    const compAtkRes = currentPlayer.getGameboard().receiveAttack(
-      opponent.getNextAttackCoords( currentPlayer.getGameboard().getPlayGrid() )
-    );
-    renderBoards();//show computer's attack
-    msgDiv.textContent = compAtkRes === 'hit'
-      ? 'Computer\'s attack hit! Make your turn..'
-      : 'Computer\'s Attack missed! Make your turn..';
-    //check if computer won
-    if ( currentPlayer.getGameboard().allShipsSunk() ) {
-      //disable attackingBoardDiv, inform player
-      attackingBoardDiv.removeEventListener('click', sendAttack);
-      msgDiv.textContent = 'Computer wins!';
-    }
-    computerAttacking = false; //disable to allow player's next attack
-  };
-
   //listener cb fn to handle sending an attack to opponent board and get computer's attacks
   const sendAttack = (e)=> {
     e.stopPropagation();
@@ -112,6 +93,8 @@ const initProject = ()=> {
       //call receiveAttack fn on opponent's gameboard, save result for display logic
       const attackRes = opponent.getGameboard()
         .receiveAttack( [e.target.dataset.row, e.target.dataset.col] );
+      //log opponent playGrid arr after sending attack
+      // lg2sa( opponent.getGameboard().getPlayGrid() ); //comment for prod
       //only re-render when attackRes is a useful string like hit or miss
       if (attackRes) {
         renderBoards();//show attack result to current player
@@ -154,60 +137,71 @@ const initProject = ()=> {
     faulty off cell:o
     faulty in cell:o */
 
-  //fn to move to next player when continueBtn clicked
+  //fn to get and handle computer's attacks. called by setTimeout after attacking computer
+  const getAndHandleComputerAttack = ()=> {
+    //get computer's attack coordinates, need to pass in player's board for computer decision
+    const compAtkRes = currentPlayer.getGameboard().receiveAttack(
+      opponent.getNextAttackCoords( currentPlayer.getGameboard().getPlayGrid() )
+    );
+    renderBoards();//show computer's attack
+    msgDiv.textContent = compAtkRes === 'hit'
+      ? 'Computer\'s attack hit! Make your turn..'
+      : 'Computer\'s Attack missed! Make your turn..';
+    //check if computer won
+    if ( currentPlayer.getGameboard().allShipsSunk() ) {
+      //disable attackingBoardDiv, inform player
+      attackingBoardDiv.removeEventListener('click', sendAttack);
+      msgDiv.textContent = 'Computer wins!';
+    }
+    computerAttacking = false; //disable to allow player's next attack
+  };
+
+  //fn to move to next player when continueBtn clicked. handles hiding between
+  //ship placements too.
   const continueToNextPlayer = (e)=> {
     e.stopPropagation();
     [opponent, currentPlayer] = [currentPlayer, opponent]; //swap players
-    boardsAndLabelsDiv.style.display = 'flex'; //restore boards div
-    passDeviceDiv.style.display = 'none';
-    msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' }'s attack turn..`;
-    renderBoards();
+    passDeviceDiv.style.display = 'none'; //hide
+    if (player1ShipsPlaced) { //for player2's ship placement
+      placeShipsAndSetup();
+      //show boards after renderBoards call within placeShipsAndSetup
+      boardsAndLabelsDiv.style.display = 'flex';
+    } else { //for between attacks
+      renderBoards(); //remake cells
+      boardsAndLabelsDiv.style.display = 'flex'; //show boards
+      msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' }'s attack turn..`;
+    }
   };
 
-  //fn to setup buttons, attach listeners
+  //fn to setup buttons, attach listeners, start listening for attacks
   //need to make sure works for 2P...
   const setupButtonsAndListeners = ()=> {
-    //remove listeners for ship placement at this stage if needed...
-
-    //set btns
-    [playOtherPlayerBtn, playComputerBtn, startBtn]
-      .forEach((c) => c.setAttribute('disabled', ''));
-    restartBtn.removeAttribute('disabled');
+    restartBtn.removeAttribute('disabled'); //allow restarting, same gameType
 
     msgDiv.textContent = 'Player 1\'s attack turn..';
 
     //set listener to handle attack cell clicks; re-adds it if removed by a game over
     //browser tracks named fns added, avoids duplicate attachments.
     attackingBoardDiv.addEventListener('click', sendAttack);
-    //listener for 2 player game continue button
-    continueBtn.addEventListener('click', continueToNextPlayer );
   };
 
-  //fn to click-to-place 5 ships and continue to game setup (simpler than drag and drop).
+  //fn to click-to-place 5 ships (simpler than drag and drop) for player 1, then
+  //player 2 if needed, then continue to game setup.
   const placeShipsAndSetup = ()=> {
     let lastHoveredCell; //store last cell hovered over
     const shipNamesToPlace = ['Patrol Boat', 'Destroyer', 'Submarine', 'Battleship', 'Carrier'];
     const shipLengths = [2, 3, 3, 4, 5];
     let shipIndex = 0;
-    let shipDirection = 'right'; //for ship placement, change to 'down' with a button...
+    let shipDirection = 'right'; //for ship placement
     const shipOverlayDiv = document.querySelector('.shipOverlayDiv');
-    const clearableDiv = document.querySelector('.clearable'); //for ship direction button
+    const clearableBtnsDiv = document.querySelector('.clearable'); //for ship direction button
 
-    //make and add ship direction changing button in cleared .clearable div
-    clearableDiv.textContent = '';
-    const shipDirectionBtn = document.createElement('button');
-    shipDirectionBtn.textContent = 'change ship direction';
-    clearableDiv.append( shipDirectionBtn );
-    //todo: make listener for shipDirectionBtn...
-    shipDirectionBtn.addEventListener('click', ()=> {
-      shipDirection = shipDirection === 'right' ? 'down' : 'right';
-    });
+    //cb fn to change ship placement direction
+    const changeDirection = ()=> shipDirection = shipDirection === 'right' ? 'down' : 'right';
 
-    //initial ship placement message
-    msgDiv.textContent = 'Click to place your Patrol Boat. Change ship direction below';
-
-    //fn to show and position shipOverlayDiv for current ship being placed
+    //listener cb fn to show shipOverlayDiv for current ship being placed. saves hovered cell
     const showShipOverlay = (e)=> {
+      e.stopPropagation();
       lastHoveredCell = e.target.classList.contains('cellDiv') ? e.target : null;
       if (lastHoveredCell) { // .cellDivs only
         //align ship overlay to lastHoveredCell
@@ -226,80 +220,82 @@ const initProject = ()=> {
       }
     };
 
-    //visual feedback:
-    renderBoards();
-    //show overlay preview of ship to place on hovered .cellDiv element and save it
-    receivingBoardDiv.addEventListener('mouseover', showShipOverlay);
-
-    //fn for when ship placements done:
+    //fn to clean up after ship placements. removes listeners
     const shipPlacementCleanup = ()=> {
-      //remove listeners
       receivingBoardDiv.removeEventListener('click', placeShipFromCell);
       receivingBoardDiv.removeEventListener('mouseover', showShipOverlay);
-      // hide shipOverlayDiv
-      shipOverlayDiv.style.display = 'none';
+      shipDirectionBtn.removeEventListener('click', changeDirection);
+      shipOverlayDiv.style.display = 'none'; // hide shipOverlayDiv
+      shipDirectionBtn.setAttribute('disabled', ''); //disable direction btn
     };
 
-    //board click cb to place 5 ships in current player's gameboard. uses gameboard.placeShip()...
-    const placeShipFromCell = ()=> {
-      //handle when all 5 ships placed for current player...
-
-      //when a ship must be placed and cursor on cell
+    //cb fn to place 5 ships in current player's gameboard
+    const placeShipFromCell = (e)=> {
+      e.stopPropagation();
+      //when a ship must be placed and cursor is still over cell
       if (shipIndex < shipNamesToPlace.length && lastHoveredCell) {
-        // lg(lastHoveredCell); //debug
         //try placing a ship; placeShip throws errors to catch
         try {
-          //placeShip args: startCoords, shipDirection, ship name
           currentPlayer.getGameboard().placeShip(
             [+lastHoveredCell.dataset.row, +lastHoveredCell.dataset.col],
             shipDirection,
             shipNamesToPlace[shipIndex]
           );
-          // lg( currentPlayer.getGameboard().getPlayGrid() );
           renderBoards(); //show the placed ship
           shipIndex++; //increment index
-          //set msg for next placement
+          //set msg for next ship placement if ship index valid
           if (shipIndex < 5) {
             msgDiv.textContent = `Place your ${shipNamesToPlace[shipIndex]}`;
-            //continue to setup when all ships placed
-          } else {
-            if (gameType === '1P') {
-              //cleanup listeners first
-              shipPlacementCleanup();
-              setupButtonsAndListeners();
+          //continue to setup/start game when all ships placed (shipIndex === 5)
+          } else if (gameType === '1P') {
+            shipPlacementCleanup(); //remove listeners
+            player2.getGameboard().placeShipsRandomly();//populate computer's board randomly
+            setupButtonsAndListeners(); //setup / start game
+          } else if (gameType === '2P') {
+            //hide shipOverlayDiv...
+            shipOverlayDiv.style.display = 'none';
+            //P2 needs to place their ships when P1 finishes
+            if (!player1ShipsPlaced) {
+              //assign player1ShipsPlaced to true now that player 1 ships are placed.
+              //when this condition in the control flow statement is met, the next
+              //else if condition block will not execute.
+              player1ShipsPlaced = true;
+            //when player1ShipsPlaced is true, then player2 ships placement has finished
+            } else if (player1ShipsPlaced) {
+              //set player1ShipsPlaced control var to false for attacks to begin
+              //after continueToNextPlayer fn checks it
+              player1ShipsPlaced = false;
+              shipPlacementCleanup(); //remove listeners
+              setupButtonsAndListeners(); //setup / start game
             }
-            //for 2P games: ...
-            lg('test');
+            boardsAndLabelsDiv.style.display = 'none';
+            passDeviceDiv.style.display = 'block';
+            msgDiv.textContent = ''; //clear prev player msg
           }
           //log ship placement errors, user can try again
         } catch (err) {
           msgDiv.textContent = 'invalid ship placement, try again';
-          lg(err.message);
+          // lg(err.message);
         }
       }
     };
 
+    shipOverlayDiv.style.display = 'block'; //show shipOverlayDiv if it was hidden
+    renderBoards(); //show current player's boards
+    //make and add ship direction change btn in cleared .clearable div
+    clearableBtnsDiv.textContent = ''; //clear old btns
+    const shipDirectionBtn = document.createElement('button');
+    shipDirectionBtn.textContent = 'change ship direction';
+    clearableBtnsDiv.append( shipDirectionBtn );
+    shipDirectionBtn.addEventListener('click', changeDirection);
+    //show preview overlay of ship to place on hovered .cellDiv element
+    receivingBoardDiv.addEventListener('mouseover', showShipOverlay);
+    //show ship placement message
+    msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2'}, click
+    to place your Patrol Boat`;
+    //start listeners for current player ship placement
     receivingBoardDiv.addEventListener('click', placeShipFromCell);
-  };
-
-  //fn for default population of both player boards, for dev
-  //base a new fn off this one for random all ship placement in prod...
-  const defaultBoardsPopulation = ()=> {
-    [player1, player2].forEach( (player) => {
-      //populate player's board with default ships for now...
-      player.getGameboard().placeShip([0, 0], 'right', 'Patrol Boat');
-      player.getGameboard().placeShip([4, 5], 'up', 'Destroyer');
-      player.getGameboard().placeShip([5, 4], 'right', 'Submarine');
-      player.getGameboard().placeShip([7, 2], 'up', 'Battleship');
-      player.getGameboard().placeShip([8, 1], 'right', 'Carrier');
-
-      return player; //return player obj to .map() for array destructuring assignment
-    });
-    //add extra ships for board 2 for now...
-    // player2.getGameboard().placeShip([1, 0], 'right', 'Destroyer');
-    // player2.getGameboard().placeShip([2, 0], 'right', 'Submarine');
-    // player2.getGameboard().placeShip([3, 0], 'right', 'Battleship');
-    // player2.getGameboard().placeShip([4, 0], 'right', 'Carrier');
+    continueBtn.addEventListener('click', continueToNextPlayer );
   };
 
   //listener for buttons in setupControlsWrap
@@ -308,54 +304,61 @@ const initProject = ()=> {
     e.stopPropagation();
 
     switch (e.target.id) {
-      //when 2P (battle other player) game type chosen
+      //when 2P (battle other player) game type chosen...
       case 'playOtherPlayerBtn':
         gameType = '2P';
-        //make and assign 2 players (default type human), populate their boards
+        //make and assign 2 players (both are default type human)
         player1 = makePlayer();
         player2 = makePlayer();
         [currentPlayer, opponent] = [player1, player2];
-        defaultBoardsPopulation();//for dev...
-        //inform starting player, enable startBtn...
-        msgDiv.textContent = 'Player 1 goes first! click start to place ships..';
-        startBtn.removeAttribute('disabled');
+        //inform starting player, enable startBtn
+        msgDiv.textContent = 'Player 1, please take device and click start';
+        startBtn.removeAttribute('disabled'); //
         break;
       //when 1P (battle computer) game type chosen
       case 'playComputerBtn':
-        // debugger
         gameType = '1P'; //gameType for computer choice logic
         //make one human, one computer player
         player1 = makePlayer(); //type 'human' is default
         player2 = makePlayer('computer');
         [currentPlayer, opponent] = [player1, player2];
-        // defaultBoardsPopulation();//for dev...
-        //start ship placement listener, setup game when done..
+        //start ship placement listener, it will take over control flow and
+        //setup/start game when all ships placed
         placeShipsAndSetup();
         break;
-      //setup game (board display,event listeners) when start btn clicked
+      //For 2P games: start btn step gets players used to passing the play device
       case 'startBtn':
-        setupButtonsAndListeners();
+        startBtn.setAttribute('disabled', ''); //not needed anymore
+        placeShipsAndSetup();
         break;
       //handle boards/state reset, game restart
       case 'restartBtn':
-        lg('restarting game..');//debug
-        //restore boards if reset button pressed when passDeviceDiv active
-        boardsAndLabelsDiv.style.display = 'flex';
-        passDeviceDiv.style.display = 'none';
-        //path for restarting computer battle...
+        //path for restarting computer battle
         if (gameType === '1P') {
-          //reset boards
-          player1 = makePlayer();//player obj with default 'human' type
+          //remake boards, reset player order
+          player1 = makePlayer();
           player2 = makePlayer('computer');
-          defaultBoardsPopulation();//for dev...
-          setupButtonsAndListeners();
-        //path for restarting 2 player battle
+          [currentPlayer, opponent] = [player1, player2];
+          attackingBoardDiv.removeEventListener('click', sendAttack); //disable until ships placed
+          restartBtn.setAttribute('disabled', ''); //disable until game starts
+          //start ship placement listener, it will take over control flow and
+          //setup/start game when all ships placed
+          placeShipsAndSetup();
+        //path for restarting 2 player battle...
         } else {
+          // lg('restarting 2p game..');//debug
+          //restore boards if restart button pressed when passDeviceDiv active
+          boardsAndLabelsDiv.style.display = 'flex';
+          passDeviceDiv.style.display = 'none';
           //reset boards by reassigning player1/2 to new player objects with null playGrid arrays
-          player1 = makePlayer();//player obj with default 'human' type
+          player1 = makePlayer();
           player2 = makePlayer();
-          defaultBoardsPopulation();//for dev...
-          setupButtonsAndListeners();
+          [currentPlayer, opponent] = [player1, player2];
+          attackingBoardDiv.removeEventListener('click', sendAttack); //disable until ships placed
+          restartBtn.setAttribute('disabled', ''); //disable until game starts
+          //start ship placement listener, it will take over control flow and
+          //setup/start game when all ships placed
+          placeShipsAndSetup();
         }
         break;
     }

@@ -4,9 +4,8 @@
 
 // JS imports
 //include file extension For Node.js when importing local modules:
-import { logToConsole as lg, tableToConsole as tb, objectToString as ots } from './logger.js';
+import { logToConsole as lg, objectToString as ots, logSetValues as lsv } from './logger.js';
 import makeLinkedList from './linkedList.js';
-import makeQueue from './queue.js';
 
 //jest testing for this file is in main.test.js and done with ES Module exports
 
@@ -58,12 +57,12 @@ const _placeAndGetShip = ( startCoords, direction, shipName, playGrid )=> {
     if ( row > -1 && row < 10 && col > -1 && col < 10 ) {
       //check if cell is occupied
       if ( playGrid[row][col] === null ) return true;
-      throw new Error('cell occupied'); //when cell has a ship
+      throw new Error(`cell ${row},${col} occupied`); //when cell has a ship
       //*throw statement immediately ends fn execution. control then passed to first
       //catch block in the call stack. program terminates if no catch block exists
       //among caller functions.
     }
-    throw new Error('cell out of bounds'); //when cell out of bounds
+    throw new Error(`cell ${row},${col} out of bounds`); //when cell out of bounds
   };
 
   //place ship on board by checking if all cells valid to mark with ship name.
@@ -112,9 +111,78 @@ export const makeGameboard = ()=> {
 
   //this fn calls private _placeAndGetShip with playGrid reference and expects ship obj back
   //errors on invalid placement arguments, can use try-catch blocks
-  const placeShip = (startCoords, direction, shipName,)=> {
+  const placeShip = (startCoords, direction, shipName,)=> { //types: arr,str,str
     //place ship by marking board in _placeAndGetShip, then set returned ship in shipsMap
     shipsMap.set( shipName, _placeAndGetShip(startCoords, direction, shipName, playGrid) );
+  };
+
+  //fn to populate board with the ships in random positions
+  const placeShipsRandomly = ()=> {
+    //make array of ship names from largest to smallest
+    const shipsToPlace = ['Carrier', 'Battleship', 'Submarine', 'Destroyer', 'Patrol Boat'];
+    const shipSizes = [5, 4, 3, 3, 2]; //use this with loop to fill in set
+    const markedCoords = new Set();
+    const coordsToTry = makeLinkedList(); //pick random coords arr from this shrinking list
+    playGrid.forEach( (rowArr, row)=> { //fill list with coord arrays
+      rowArr.forEach( (data, col)=> coordsToTry.append([row, col]) );
+    } );
+    //recursive fn to place all ships. randomized greedy algo w/ small inifinite loop chance
+    const placeShips = (shipIndex)=> {
+      //base case: done placing when shipIndex matches length of shipsToPlace
+      if (shipIndex === shipsToPlace.length) return;
+      //pick random aim/direction and coordinate from linked list
+      let aim = Math.random() < 0.5 ? 'right' : 'down';
+      const currentCoord = coordsToTry
+        .removeAt( Math.floor( Math.random() * coordsToTry.getSize() ) );
+      //abandon coordinate if in markedCoords set
+      if ( markedCoords.has(currentCoord.join(',')) ) {
+        // lg(`${currentCoord} occupied, trying again`);
+        placeShips(shipIndex);
+      } else {
+        try { //place ship with random available coordinate
+          placeShip( currentCoord, aim, shipsToPlace[shipIndex] );
+          //keep track of cells marked in playGrid past origin in a set to check.
+          //removal from linked list is expensive.
+          for (let i = 1; i < shipSizes[shipIndex]; i++) {
+            if (aim === 'right') { //track right from placement origin
+              markedCoords.add(`${currentCoord[0]},${currentCoord[1] + i}`);
+            } else { //track down from placement origin
+              markedCoords.add(`${currentCoord[0] + i},${currentCoord[1]}`);
+            }
+          }
+          placeShips(++shipIndex);//place next ship recursively
+        } catch (err) { //try again with modded placement args if ship placement failed.
+          //remember isValid in _placeAndGetShip checks all cells to throw errors
+          //try new coordinate if origin throws occupied error
+          if ( +err.message[5] === currentCoord[0]
+            && +err.message[7] === currentCoord[1] ) {
+            // lg('origin coordinate occupied. will try new one');
+            placeShips(shipIndex);
+          } else { //try placing in opposite aim
+            // lg(`found ${err.message} during ${shipsToPlace[shipIndex] } placement. will try opposite aim`);
+            try { //try opposite aim before abandoning origin coordinate
+              aim = aim === 'right' ? 'left' : 'up';
+              placeShip( currentCoord, aim, shipsToPlace[shipIndex] );
+              for (let i = 1; i < shipSizes[shipIndex]; i++) { //track cells past origin
+                if (aim === 'left') { //track left from placement origin
+                  markedCoords.add(`${currentCoord[0]},${currentCoord[1] - i}`);
+                } else { //track up from placement origin
+                  markedCoords.add(`${currentCoord[0] - i},${currentCoord[1]}`);
+                }
+              }
+              placeShips(++shipIndex);//place next ship recursively
+            } catch (err) { //2 omnidirectional tries from origin done, abandon for now
+              lg(`found ${err.message} during ${shipsToPlace[shipIndex] } placement. will try new coordinate`);
+              coordsToTry.append(currentCoord);//return unused coord to linked list
+              placeShips(shipIndex);
+            }
+          }
+        }
+      }
+    };
+    //start placing all ships recursively
+    placeShips(0);
+    // lsv(markedCoords); //view set...
   };
 
   //fn to handle attack from coordinates. must call hit on ships, or record missed shot.
@@ -162,7 +230,8 @@ export const makeGameboard = ()=> {
     placeShip,
     receiveAttack,
     getShipsMap: ()=> shipsMap,
-    allShipsSunk
+    allShipsSunk,
+    placeShipsRandomly
   };
 };
 
@@ -209,16 +278,18 @@ const isComputer = (gameboard)=> {
             coordsToTry.removeAt( coordsToTry.findIndex(`${newRow},${newCol}`) );
             return [[newRow, newCol], 'hit'];
           default:
-            // lg(`no null or ship name found at row: ${newRow} col: ${newCol}. for loop iteration index: ${i}`);
+            // lg(`no null or ship name found at row: ${newRow} col: ${newCol
+            // }. for loop iteration index: ${i}`);
         }
       }
     }
-    //no valid URDL cell if no return from loop. return null so getNextAttackCoords picks a random cell
+    //no valid URDL cell if no return from loop. return null so getNextAttackCoords
+    //picks a random cell
     return [[null, null], null];
   };
 
   //fn to get computer's next attack. Accesses opponent gameboard arr for cell data
-  //works ok with spaced apart ships, but if ships touch, errors. if board is too crowded, forgets how to reverse...
+  //works ok with spaced apart ships, but if ships touch, or board too crowded, degrades
   const getNextAttackCoords = (playerPlayGrid)=> {
     //if secondLastHitCoords holds a value from two previous URDL (up,right,down,left)
     //adjacent hits, begin linear attacks

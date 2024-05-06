@@ -31,8 +31,8 @@ test('gameboard obj creation', ()=> {
   board.placeShip( [6, 8], 'down', 'Battleship' ); //length 4
   board.placeShip( [9, 9], 'up', 'Carrier' ); //length 5
   //out of bounds / occupied placement tests
-  expect( ()=> board.placeShip( [0, 0], 'right', 'Carrier' ) ).toThrow('cell occupied');
-  expect( ()=> board.placeShip( [0, 9], 'right', 'Carrier' ) ).toThrow('cell out of bounds');
+  expect( ()=> board.placeShip( [0, 0], 'right', 'Carrier' ) ).toThrow('cell 0,0 occupied');
+  expect( ()=> board.placeShip( [0, 9], 'right', 'Carrier' ) ).toThrow('cell 0,10 out of bounds');
   //received attack tests
   expect( ()=> board.receiveAttack([10, 0]) ).toThrow('attack out of bounds');
   board.receiveAttack([5, 0]);
@@ -55,7 +55,7 @@ test('gameboard obj creation', ()=> {
   // log2DStringArray( board.getPlayGrid() );
 });
 
-test('more gameboard obj tests', ()=> {
+test('gameboard obj tests 1', ()=> {
   //make 10x10 Gameboard instance
   const board = makeGameboard();
   //check board methods
@@ -76,6 +76,12 @@ test('more gameboard obj tests', ()=> {
 
   //visualize board
   // log2DStringArray( board.getPlayGrid() );
+});
+
+test('gameboard random ship population', ()=> {
+  const board = makeGameboard();
+  board.placeShipsRandomly(); //place ships randomly
+  // log2DStringArray( board.getPlayGrid() ); //visualize board
 });
 
 test('player obj creation', ()=> {
