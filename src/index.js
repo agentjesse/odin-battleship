@@ -2,8 +2,6 @@
 
 -cleanup logs
 
--find fns to refactor out of callbacks, if any
-
 -update linkedlist in its own repo and your other projects to match the one from this project where at() has been optimized. there is another optimization to do also, if there is time...
 
 -turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
@@ -43,46 +41,33 @@ const initProject = ()=> {
   let player2;
   let currentPlayer; //turn reference vars
   let opponent;
-  let computerAttacking = false; //boolean to hold off premature attacks against computer...
+  let computerAttacking = false; //boolean to hold off premature attacks against computer
   let debounceTimerIdentifier; //store timeout identifier from the setTimeout in sendAttack
-  let player1ShipsPlaced = false; //to track player1 ship placement completion...
-  let player1PlacingShips = false; //working on this...
-  let player2ShipsPlaced = false; //to track player2 ship placement completion...
+  let player1ShipsPlaced = false; //to track player1 ship placement completion
+  let player1PlacingShips = false; //working on this
+  let player2ShipsPlaced = false; //to track player2 ship placement completion
   let placeShipsRandomlyBtn; //save access to block it
 
   //fn to render a player's 2 boards; call after data changes in players' playGrid arrays
   const renderBoards = ()=> {
     // lg('rendering boards. current player has playGrid arr:'); //debug
     // lg( currentPlayer.getGameboard().getPlayGrid() ); //debug
-    receivingBoardDiv.textContent = ''; //cleanup old cells
-    attackingBoardDiv.textContent = ''; //cleanup old cells
-    //build current player's receiving and attacking boards
-    //this code can be refactored: [currentPlayer, opponent].forEach()...
-    currentPlayer.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
-      // lg(rowArr.join()); //debug
-      rowArr.forEach( (data, col)=> {
-        //make and append cell divs from data
-        const cellDiv = document.createElement('div');
-        cellDiv.classList.add('cellDiv');
-        cellDiv.dataset.cellData = data;
-        cellDiv.dataset.row = row;
-        cellDiv.dataset.col = col;
-        receivingBoardDiv.append( cellDiv );
+    [[currentPlayer, receivingBoardDiv], [opponent, attackingBoardDiv]]
+      .forEach( ([player, boardDiv])=> {
+        boardDiv.textContent = ''; //delete old cells
+        //build cells from playGrid array, append to board div
+        player.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
+          // lg(rowArr.join()); //debug
+          rowArr.forEach( (data, col)=> {
+            const cellDiv = document.createElement('div');
+            cellDiv.classList.add('cellDiv');
+            cellDiv.dataset.cellData = data;
+            cellDiv.dataset.row = row;
+            cellDiv.dataset.col = col;
+            boardDiv.append( cellDiv );
+          } );
+        } );
       } );
-    } );
-    opponent.getGameboard().getPlayGrid().forEach( (rowArr, row)=> {
-      // lg(rowArr.join()); //debug
-      rowArr.forEach( (data, col)=> {
-        //make and append cell divs from data
-        const cellDiv = document.createElement('div');
-        cellDiv.classList.add('cellDiv');
-        cellDiv.setAttribute( 'data-cell-data', data );
-        cellDiv.dataset.row = row;
-        cellDiv.dataset.col = col;
-        attackingBoardDiv.append( cellDiv );
-      } );
-    } );
-
   };
 
   //listener cb fn to handle sending an attack to opponent board and get computer's attacks
@@ -90,7 +75,7 @@ const initProject = ()=> {
     e.stopPropagation();
     //return early if debounceTimerIdentifier holds a timer identifier from setTimeout
     if (debounceTimerIdentifier) return;
-    //return early if computer attack not done ...maybe not needed after debouncing?...
+    //return early if computer attack not done
     if (computerAttacking) return;
     //set computerAttacking to true
     if (gameType === '1P') computerAttacking = true;
@@ -102,8 +87,8 @@ const initProject = ()=> {
       //only re-render when attackRes is a useful string like hit or miss
       if (attackRes) {
         //log opponent playGrid arr after sending attack. comment for prod...
-        lg(`${opponent === player1 ? 'P1' : 'P2'}'s board:`);
-        lg2sa( opponent.getGameboard().getPlayGrid() );
+        // lg(`${opponent === player1 ? 'P1' : 'P2'}'s board:`);
+        // lg2sa( opponent.getGameboard().getPlayGrid() );
         renderBoards();//show attack result
         //handle game over when all opponent's ships sunk
         if (opponent.getGameboard().allShipsSunk()) {
@@ -126,7 +111,7 @@ const initProject = ()=> {
               getAndHandleComputerAttack();
             }
             debounceTimerIdentifier = null; //clear it after either path
-          }, 150); //extend this delay to 1500 for prod...
+          }, 1500); //extend this delay to 1500 for prod...
         }
       //handle click on cellDiv that did not result in hit / miss (previously attacked cell)
       } else {
@@ -163,17 +148,17 @@ const initProject = ()=> {
   const continueToNextPlayer = (e)=> {
     e.stopPropagation();
     [opponent, currentPlayer] = [currentPlayer, opponent]; //swap players
-    lg(currentPlayer === player1 ? 'switched to player1' : 'switched to player2'); //debug
+    // lg(currentPlayer === player1 ? 'switched to player1' : 'switched to player2'); //debug
     passDeviceDiv.style.display = 'none'; //hide
     //listen for P2 ships placement
     if (!player2ShipsPlaced && player1ShipsPlaced && !player1PlacingShips) {
       placeShipsAndSetup();
-      lg(4);
+      // lg(4);
     //show next player's boards and info msg on click
     } else {
       renderBoards(); //remake cells
       msgDiv.textContent = `Player ${ currentPlayer === player1 ? '1' : '2' }'s attack turn..`;
-      lg(5);
+      // lg(5);
     }
     boardsAndLabelsDiv.style.display = 'flex'; //show boards
   };
@@ -214,10 +199,10 @@ const initProject = ()=> {
           if (gameType === '1P') { //for 1P game
             //prep for game start, but still allow random placements
             shipPlacementCleanup(true); //remove listeners
-            lg(6);
+            // lg(6);
           } else { //for 2P game
             shipOverlayDiv.style.display = 'none'; //hide
-            lg(7);
+            // lg(7);
           }
           startBtn.removeAttribute('disabled'); //enable for confirmation
           msgDiv.textContent = 'Click start to confirm placements';
@@ -274,13 +259,13 @@ const initProject = ()=> {
     msgDiv.textContent = 'Click start to confirm placements.';
   };
 
-  //fn to listen for 5 ship placements. Click-to-place (simpler than drag and drop), or place randomly for player 1, then
-  //player 2 if needed. ship placements must be confirmed via start button...
+  //fn to listen for 5 ship placements in 2 ways: click-cells-to-place (simpler than
+  //drag and drop), or click random placement. Placements confirmed via start button
   const placeShipsAndSetup = ()=> {
     shipIndex = 0;
     shipDirection = 'right'; //for ship placement
 
-    lg(`now listening for ${ currentPlayer === player1 ? 'P1' : 'P2'} placements`); //debug
+    // lg(`now listening for ${ currentPlayer === player1 ? 'P1' : 'P2'} placements`); //debug
 
     //add ship direction change, and random placement btns in cleared .clearable div
     clearableBtnsDiv.textContent = ''; //clear old btns
@@ -343,7 +328,7 @@ const initProject = ()=> {
           player1PlacingShips = true;//set placement state
           startBtn.setAttribute('disabled', ''); //disable btn
           placeShipsAndSetup(); //begin listening
-          lg(1);
+          // lg(1);
         //accept P1 ship placements, hide boards, show passDeviceDiv. Once P2 has device and
         //clicks continueBtn, continueToNextPlayer handles listening for P2 ship placements
         } else if (player1PlacingShips && !player1ShipsPlaced) {
@@ -355,13 +340,13 @@ const initProject = ()=> {
           passDeviceDiv.style.display = 'block'; //show passing screen with continueBtn
           msgDiv.textContent = ''; //clear prev player msg
           shipDirectionBtn.setAttribute('disabled', ''); //disable
-          lg(2);
+          // lg(2);
         //accept P2 ship placements, start game. no need to pass device...
         } else if (player1ShipsPlaced && !player1PlacingShips) {
           player2ShipsPlaced = true; //set placement state
           shipPlacementCleanup(); //stop placement listeners
           setBtnsListenersAndStart(); //setup / start game
-          lg(3);
+          // lg(3);
         }
         break;
       //handle boards/state reset, game restart
@@ -379,7 +364,7 @@ const initProject = ()=> {
           placeShipsAndSetup();
         //path for restarting 2 player battle...
         } else {
-          lg('restarting 2p game..');//debug
+          // lg('restarting 2p game..');//debug
           // debugger
           //restore boards if restart button pressed when passDeviceDiv active
           boardsAndLabelsDiv.style.display = 'flex';
