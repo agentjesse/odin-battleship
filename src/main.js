@@ -105,9 +105,9 @@ export const makeGameboard = ()=> {
   //Top left board cell coordinates are 0,0. Each 2nd dimension array maps to a board
   //row, top to bottom. Each element of 2nd dimension arrays maps to a board column,
   //from left to right.
-  const playGrid = [...Array(10)].map( ()=> Array(10).fill(null) );
+  let playGrid = [...Array(10)].map( ()=> Array(10).fill(null) );
   //store made ships in this js Map for quick access:
-  const shipsMap = new Map();
+  let shipsMap = new Map();
 
   //this fn calls private _placeAndGetShip with playGrid reference and expects ship obj back
   //errors on invalid placement arguments, can use try-catch blocks
@@ -118,6 +118,9 @@ export const makeGameboard = ()=> {
 
   //fn to populate board with the ships in random positions
   const placeShipsRandomly = ()=> {
+    //clear grid, shipsMap. no iteration for better time complexity
+    playGrid = [...Array(10)].map( ()=> Array(10).fill(null) );
+    shipsMap = new Map();
     //make array of ship names from largest to smallest
     const shipsToPlace = ['Carrier', 'Battleship', 'Submarine', 'Destroyer', 'Patrol Boat'];
     const shipSizes = [5, 4, 3, 3, 2]; //use this with loop to fill in set
@@ -172,7 +175,7 @@ export const makeGameboard = ()=> {
               }
               placeShips(++shipIndex);//place next ship recursively
             } catch (err) { //2 omnidirectional tries from origin done, abandon for now
-              lg(`found ${err.message} during ${shipsToPlace[shipIndex] } placement. will try new coordinate`);
+              // lg(`found ${err.message} during ${shipsToPlace[shipIndex] } placement. will try new coordinate`);
               coordsToTry.append(currentCoord);//return unused coord to linked list
               placeShips(shipIndex);
             }
