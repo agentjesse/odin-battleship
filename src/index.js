@@ -111,7 +111,7 @@ const initProject = ()=> {
               getAndHandleComputerAttack();
             }
             debounceTimerIdentifier = null; //clear it after either path
-          }, 1500); //extend this delay to 1500 for prod...
+          }, 1000); //extend this delay to 1000 for prod...
         }
       //handle click on cellDiv that did not result in hit / miss (previously attacked cell)
       } else {
@@ -302,11 +302,12 @@ const initProject = ()=> {
         player2 = makePlayer();
         [currentPlayer, opponent] = [player1, player2];
         //inform starting player, enable startBtn
-        msgDiv.textContent = 'Player 1, please take or turn device away and click start';
+        msgDiv.textContent = 'Player 1, please turn device away and click start';
         startBtn.removeAttribute('disabled'); //
         break;
       //when 1P (battle computer) game type chosen
       case 'playComputerBtn':
+        document.querySelectorAll('.hideMe').forEach((c)=>c.className = ''); //show titles
         gameType = '1P'; //gameType for computer choice logic
         //make one human, one computer player
         player1 = makePlayer(); //type 'human' is default
@@ -325,6 +326,7 @@ const initProject = ()=> {
         //for 2P games:
         //listen for P1 ship placements
         } else if (!player1ShipsPlaced && !player1PlacingShips) {
+          document.querySelectorAll('.hideMe').forEach((c)=>c.className = ''); //show titles
           player1PlacingShips = true;//set placement state
           startBtn.setAttribute('disabled', ''); //disable btn
           placeShipsAndSetup(); //begin listening

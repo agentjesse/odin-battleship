@@ -35,8 +35,9 @@ button { display: block; cursor: pointer; }
   --submarineColor: hsl(181, 100%, 22%);
   --battleshipColor:hsl(181, 100%, 17%);
   --carrierColor:   hsl(181, 100%, 13%);
-  --hitColor: hsl(0, 100%, 44%);
-  --missColor: hsl(38, 100%, 71%);
+  --hitColor: hsl(0, 85%, 44%);
+  --missColor: hsl(38, 90%, 67%);
+  --boatShadow: 0 0 0.3rem 0rem var(--bg950) inset;
 }
 
 /* main CSS */
@@ -51,13 +52,17 @@ body{
   /* overflow-y: hidden; */
 
   h1 {
+    font-size: 1.5rem;
     text-align: center;
     margin-top: 0.25rem;
     background-color: var(--bg900);
+    text-shadow: 0 0 0.7rem var(--black);
+    padding: 0.2rem 0 0.1rem 0;
+    border-radius: 0.5rem;
   }
 
   span {
-    color: var(--bg800);
+    color: var(--bg950);
   }
 
 }
@@ -65,9 +70,17 @@ body{
 #passDeviceDiv {
   display: none;
   background-color: var(--fg200);
+  padding: 1rem;
 
   #continueBtn {
-    color: var(--bg800);
+    color: var(--white);
+    font-size: 1rem;
+    background-color: var(--bg600);
+    padding: 0.5rem 1rem;
+    margin: 0.5rem auto;
+    border: 3px outset var(--bg700);
+    border-radius: 1.5rem;
+    box-shadow: 0 0 2px 1px var(--bg900);
   }
 }
 
@@ -80,35 +93,56 @@ body{
   span {
     flex-basis: 50%;
     text-align: center;
+    text-shadow: 0 0 1px var(--bg600);
+    margin-top: 0.2rem;
+  }
+
+  .hideMe {
+    display: none;
   }
 
   #playerBoardsWrap {
     flex-basis: 100%;
     display: flex;
-    gap: 0.25rem;
+    gap: 0.4rem;
+    margin: 0.15rem 0.3rem;
 
     .receivingBoardDiv,
     .attackingBoardDiv {
       display: grid;
       grid-template: repeat(10, 1fr) / repeat(10, 1fr);
       width: 50%;
-      border: 3px solid var(--mg500);
+      border: 2px solid var(--mg500);
+      box-shadow: 0 0 3px 0px var(--black);
+      background: repeating-linear-gradient(
+        to bottom,
+        #0ba4d2 0%, 
+        #17b1e4 6.25%,
+        #55c3e5 12.5%,
+        #17b1e4 18.5%,
+        #0ba4d2 25%
+      );
     }
     .receivingBoardDiv {
       [data-cell-data="Patrol Boat"] {
         background-color: var(--patrolBoatColor);
+        box-shadow: var(--boatShadow);
       }
       [data-cell-data="Destroyer"] {
         background-color: var(--destroyerColor);
+        box-shadow: var(--boatShadow);
       }
       [data-cell-data="Submarine"] {
         background-color: var(--submarineColor);
+        box-shadow: var(--boatShadow);
       }
       [data-cell-data="Battleship"] {
         background-color: var(--battleshipColor);
+        box-shadow: var(--boatShadow);
       }
       [data-cell-data="Carrier"] {
         background-color: var(--carrierColor);
+        box-shadow: var(--boatShadow);
       }
     }
     
@@ -120,14 +154,14 @@ body{
     }
 
     .cellDiv {
-      border: 1px solid var(--bg900);
+      border: 0.5px solid var(--black);
       aspect-ratio: 1/1; /*match "auto" width or height to aspect ratio*/
     }
   }
 }
 
 .shipOverlayDiv {
-  background-color: var(--mg500);
+  background-color: var(--bg950);
   opacity: 0.7;
   display: block;
   position: absolute;
@@ -135,14 +169,16 @@ body{
 }
 
 #msgDiv {
-  margin: 0 auto 0.25rem;
+  font-size: 1.2rem;
+  text-shadow: 0 0 0.7rem var(--black);
+  margin: 0.5rem auto 0.25rem;
   text-align: center;
 }
 
 .setupControlsWrap {
   display: flex;
   justify-content: center;
-  width: 35rem;
+  max-width: 35rem;
   margin: 0 auto;
   gap: 0.25rem;
 
@@ -152,21 +188,24 @@ body{
     flex-wrap: wrap;
     justify-content: center;
     text-align: center;
-    background-color: var(--fg100);
+    background-color: var(--fg50);
     gap: 0.25rem;
     padding: 0.25rem 0 0.25rem;
+    border-radius: 0.5rem;
 
     span {
+      text-shadow: 0 0 1px var(--fg400);
       flex-basis: 60%;
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
 
     button {
       flex-basis: 48%;
       background-color: var(--bg600);
       color: var(--white);
-      border: 6px outset var(--bg700);
+      border: 3px outset var(--bg700);
       border-radius: 1.5rem;
+      box-shadow: 0 0 2px 1px var(--bg900);
     }
     button:hover {
       background-color: var(--fg200);
