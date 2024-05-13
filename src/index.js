@@ -1,10 +1,6 @@
 /* Next task:
 
--cleanup logs
-
--update linkedlist in its own repo and your other projects to match the one from this project where at() has been optimized. there is another optimization to do also, if there is time...
-
--turn this repo into new boilerplate, OR: update logger file, index.js imports examples, eslint config, package.json, refactor boilerplate to use main.js/main.test.js
+-turn this repo into new boilerplate
 */
 
 // JS/CSS imports
